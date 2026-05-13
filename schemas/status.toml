@@ -1,0 +1,236 @@
+# Skalapos status code schema — single source of truth.
+#
+# Every status code returned by a syscall is declared here. tools/gen_syscalls.py
+# reads this file and emits:
+#   - userland/libc/include/sys/status.h    (the enum, shared between kernel and userland)
+#   - userland/libc/src/sys/status_strings.c (status_name / status_describe lookup)
+#
+# Layout: status_t is a signed 32-bit value. The high 8 bits identify the
+# subsystem; the low 24 identify the code within the subsystem. STATUS_OK is
+# always zero (subsystem 0, code 0).
+#
+# To add a status code: pick the next unused number within the relevant
+# subsystem's range. NEVER renumber.
+#
+# Subsystems:
+#   0x00  global
+#   0x01  handle
+#   0x02  fs
+#   0x03  proc
+#   0x04  mem
+#   0x05  chan
+#   0x06  device
+#   0x07  io
+#   0x08  permission (v2+)
+
+[[status]]
+value     = 0x00_000000
+name      = "STATUS_OK"
+subsystem = "global"
+describe  = "success"
+
+[[status]]
+value     = 0x00_000001
+name      = "STATUS_NOT_IMPLEMENTED"
+subsystem = "global"
+describe  = "operation not implemented"
+
+[[status]]
+value     = 0x00_000002
+name      = "STATUS_INTERNAL_ERROR"
+subsystem = "global"
+describe  = "internal kernel error"
+
+[[status]]
+value     = 0x00_000003
+name      = "STATUS_INVALID_ARG"
+subsystem = "global"
+describe  = "invalid argument"
+
+# --- handle subsystem (0x01) ---
+
+[[status]]
+value     = 0x01_000001
+name      = "STATUS_BAD_HANDLE"
+subsystem = "handle"
+describe  = "handle does not refer to any object"
+
+[[status]]
+value     = 0x01_000002
+name      = "STATUS_BAD_HANDLE_TYPE"
+subsystem = "handle"
+describe  = "handle is of the wrong type for this syscall"
+
+[[status]]
+value     = 0x01_000003
+name      = "STATUS_HANDLE_TABLE_FULL"
+subsystem = "handle"
+describe  = "process has no free handle slots"
+
+# --- fs subsystem (0x02) ---
+
+[[status]]
+value     = 0x02_000001
+name      = "STATUS_NO_ENTRY"
+subsystem = "fs"
+describe  = "no such file or directory"
+
+[[status]]
+value     = 0x02_000002
+name      = "STATUS_NOT_DIR"
+subsystem = "fs"
+describe  = "path component is not a directory"
+
+[[status]]
+value     = 0x02_000003
+name      = "STATUS_IS_DIR"
+subsystem = "fs"
+describe  = "target is a directory"
+
+[[status]]
+value     = 0x02_000004
+name      = "STATUS_NAME_TOO_LONG"
+subsystem = "fs"
+describe  = "name exceeds the maximum"
+
+[[status]]
+value     = 0x02_000005
+name      = "STATUS_NOT_BENEATH"
+subsystem = "fs"
+describe  = "resolution would escape AT_BENEATH subtree"
+
+[[status]]
+value     = 0x02_000006
+name      = "STATUS_LOOP"
+subsystem = "fs"
+describe  = "too many symbolic-link traversals"
+
+[[status]]
+value     = 0x02_000007
+name      = "STATUS_PATH_NOT_RELATIVE"
+subsystem = "fs"
+describe  = "absolute paths are not accepted at the syscall boundary"
+
+[[status]]
+value     = 0x02_000008
+name      = "STATUS_EXISTS"
+subsystem = "fs"
+describe  = "target already exists"
+
+# --- proc subsystem (0x03) ---
+
+[[status]]
+value     = 0x03_000001
+name      = "STATUS_NO_PROC"
+subsystem = "proc"
+describe  = "no such process"
+
+[[status]]
+value     = 0x03_000002
+name      = "STATUS_BAD_EXEC"
+subsystem = "proc"
+describe  = "image is not a valid executable"
+
+# --- memory subsystem (0x04) ---
+
+[[status]]
+value     = 0x04_000001
+name      = "STATUS_OUT_OF_MEMORY"
+subsystem = "mem"
+describe  = "kernel out of memory"
+
+[[status]]
+value     = 0x04_000002
+name      = "STATUS_BAD_PROT"
+subsystem = "mem"
+describe  = "invalid protection bits"
+
+[[status]]
+value     = 0x04_000003
+name      = "STATUS_WX_DENIED"
+subsystem = "mem"
+describe  = "W|X mappings are forbidden by DEP"
+
+[[status]]
+value     = 0x04_000004
+name      = "STATUS_NOT_MAPPED"
+subsystem = "mem"
+describe  = "address range is not mapped"
+
+# --- channel subsystem (0x05) ---
+
+[[status]]
+value     = 0x05_000001
+name      = "STATUS_CHAN_CLOSED"
+subsystem = "chan"
+describe  = "channel has been closed"
+
+[[status]]
+value     = 0x05_000002
+name      = "STATUS_CHAN_EMPTY"
+subsystem = "chan"
+describe  = "non-blocking recv on an empty channel"
+
+[[status]]
+value     = 0x05_000003
+name      = "STATUS_CHAN_FULL"
+subsystem = "chan"
+describe  = "non-blocking send on a full channel"
+
+[[status]]
+value     = 0x05_000004
+name      = "STATUS_MSG_TOO_LARGE"
+subsystem = "chan"
+describe  = "message exceeds receiver's buffer"
+
+# --- device subsystem (0x06) ---
+
+[[status]]
+value     = 0x06_000001
+name      = "STATUS_BAD_OP"
+subsystem = "device"
+describe  = "op code does not match handle's device class"
+
+[[status]]
+value     = 0x06_000002
+name      = "STATUS_DEVICE_BUSY"
+subsystem = "device"
+describe  = "device is busy"
+
+[[status]]
+value     = 0x06_000003
+name      = "STATUS_DEVICE_GONE"
+subsystem = "device"
+describe  = "device has been removed or disabled"
+
+[[status]]
+value     = 0x06_000004
+name      = "STATUS_NOT_SUPPORTED"
+subsystem = "device"
+describe  = "operation not supported by this device"
+
+# --- io subsystem (0x07) ---
+
+[[status]]
+value     = 0x07_000001
+name      = "STATUS_EOF"
+subsystem = "io"
+describe  = "end of file"
+
+[[status]]
+value     = 0x07_000002
+name      = "STATUS_INTERRUPTED"
+subsystem = "io"
+describe  = "operation was interrupted"
+
+[[status]]
+value     = 0x07_000003
+name      = "STATUS_BAD_SIZE"
+subsystem = "io"
+describe  = "invalid size argument"
+
+[[status]]
+value     = 0x07_000004
+name      = "STATUS_CANCELED"
+subsystem = "io"
+describe  = "async op was canceled"

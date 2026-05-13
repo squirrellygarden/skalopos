@@ -1,0 +1,16 @@
+# initramfs/manifest.txt — declares what goes into the v1 initramfs CPIO.
+#
+# Format: one entry per line.
+#   <target-path>  <source-path-in-repo>
+#
+# tools/mkcpio.c reads this, builds a CPIO archive, and the build system
+# bundles it as build/<arch>/initramfs.cpio.
+#
+# Paths are relative to the repo root for sources, absolute for targets.
+
+/bin/sh      build/<arch>/userland/sh/sh
+/bin/echo    build/<arch>/userland/utils/echo/echo
+/bin/cat     build/<arch>/userland/utils/cat/cat
+/bin/ls      build/<arch>/userland/utils/ls/ls
+/bin/pwd     build/<arch>/userland/utils/pwd/pwd
+/bin/mkdir   build/<arch>/userland/utils/mkdir/mkdir

@@ -1,0 +1,12 @@
+# arch/x86_64/arch.toml — consumed by tools/gen_build.py.
+
+[arch]
+triple = "x86_64-elf"
+
+[compile]
+cflags  = ["-mno-red-zone", "-mcmodel=kernel", "-mno-sse", "-mno-mmx", "-mno-sse2"]
+asflags = []
+
+[link]
+ldscript    = "arch/x86_64/kernel.ld"
+kernel_base = "0xffffffff80100000"

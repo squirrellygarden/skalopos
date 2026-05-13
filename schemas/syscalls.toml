@@ -1,0 +1,220 @@
+# Skalapos syscall schema — single source of truth.
+#
+# Every syscall the kernel exposes is declared here. tools/gen_syscalls.py reads
+# this file and emits:
+#   - kernel/syscall/dispatch_generated.c   (number → handler table)
+#   - kernel/syscall/numbers_generated.h    (#define SKL_SYS_xxx N)
+#   - userland/libc/src/sys/syscall_generated.c   (typed libc wrappers)
+#   - userland/libc/include/sys/syscall.h         (public syscall numbers)
+#
+# Editing this file: bump nothing. Syscall numbers are assigned by hand and are
+# permanent ABI. To add a syscall, pick the next free number. To deprecate one,
+# mark it `deprecated = true` but DO NOT renumber.
+#
+# Schema format:
+#   [[syscall]]
+#   number       = N                  # syscall number (permanent)
+#   name         = "string"           # snake_case, matches handler symbol
+#   pillar       = "pillar slug"      # for docs cross-link
+#   summary      = "one line"         # included in generated docs
+#   args         = [ {name="", type=""}, ... ]
+#   returns      = "status" | "status+value"
+#   value_type   = "type"             # if returns includes a value
+#   can_block    = true|false         # may put the calling thread to sleep
+#   deprecated   = true|false         # optional; default false
+#
+# Type names map to C types in tools/gen_syscalls.py. Currently recognized:
+#   handle, status, void_ptr, const_void_ptr, char_ptr, const_char_ptr,
+#   size, ssize, off, u32, u64, i32, i64, bool, plus structs (passed by pointer).
+#
+# This file is INCOMPLETE. v1 needs entries for at least:
+#   - handle ops (close, dup, type)
+#   - process: spawn, exit, wait, kill, chroot, chdir_h
+#   - thread:  create, exit, join, set_fault_handler
+#   - channel: create, send, recv, close
+#   - fs:      open_at, mkdir_at, stat_at, fstat, unlink_at, rename_at,
+#              dir_open_at, dir_read, symlink_at, link_at
+#   - io:      file_read, file_write, file_seek
+#   - memory:  vm_alloc, vm_unmap, vm_protect, vm_advise,
+#              vm_map_file, vm_map_shared, shm_create, shm_stat
+#   - device:  dev_op
+#   - timer:   timer_create, timer_wait
+#   - mount:   fs_mount, fs_unmount
+#
+# The few entries below are illustrative starter examples. Fill in the rest when
+# the syscall surface is being implemented for real.
+
+[[syscall]]
+number     = 1
+name       = "handle_close"
+pillar     = "01-handles"
+summary    = "Release a handle in the calling process."
+args       = [ {name="h", type="handle"} ]
+returns    = "status"
+can_block  = false
+
+[[syscall]]
+number     = 2
+name       = "handle_dup"
+pillar     = "01-handles"
+summary    = "Duplicate a handle within the calling process."
+args       = [ {name="h", type="handle"}, {name="out_h", type="handle_ptr"} ]
+returns    = "status"
+can_block  = false
+
+[[syscall]]
+number     = 3
+name       = "handle_type"
+pillar     = "01-handles"
+summary    = "Introspect a handle's type and subtype."
+args       = [
+    {name="h",            type="handle"},
+    {name="out_type",     type="u32_ptr"},
+    {name="out_subtype",  type="u32_ptr"},
+]
+returns    = "status"
+can_block  = false
+
+[[syscall]]
+number     = 10
+name       = "proc_spawn"
+pillar     = "02-spawn"
+summary    = "Create a new process from an ELF image handle."
+args       = [
+    {name="image",            type="handle"},
+    {name="argv",             type="const_char_ptr_ptr"},
+    {name="envp",             type="const_char_ptr_ptr"},
+    {name="handles_to_pass",  type="const_handle_ptr"},
+    {name="handles_count",    type="size"},
+    {name="opts",             type="const_spawn_opts_ptr"},   # may be NULL
+    {name="out_proc_h",       type="handle_ptr"},
+]
+returns    = "status"
+can_block  = true
+
+[[syscall]]
+number     = 11
+name       = "proc_exit"
+pillar     = "02-spawn"
+summary    = "Terminate the calling process. Does not return."
+args       = [ {name="status_code", type="i32"} ]
+returns    = "status"        # never actually returns; signature kept uniform
+can_block  = false
+
+[[syscall]]
+number     = 20
+name       = "chan_create"
+pillar     = "04-events"
+summary    = "Create a new channel."
+args       = [
+    {name="capacity",   type="u32"},
+    {name="flags",      type="u32"},
+    {name="out_chan_h", type="handle_ptr"},
+]
+returns    = "status"
+can_block  = false
+
+[[syscall]]
+number     = 21
+name       = "chan_send"
+pillar     = "04-events"
+summary    = "Send a message (optionally with handles) on a channel. May block if full."
+args       = [
+    {name="chan_h",         type="handle"},
+    {name="msg",            type="const_void_ptr"},
+    {name="msg_len",        type="size"},
+    {name="handles",        type="const_handle_ptr"},
+    {name="handles_count",  type="size"},
+]
+returns    = "status"
+can_block  = true
+
+[[syscall]]
+number     = 22
+name       = "chan_recv"
+pillar     = "04-events"
+summary    = "Receive a message from a channel. May block if empty."
+args       = [
+    {name="chan_h",             type="handle"},
+    {name="buf",                type="void_ptr"},
+    {name="buf_cap",            type="size"},
+    {name="out_msg_len",        type="size_ptr"},
+    {name="handles_buf",        type="handle_ptr"},
+    {name="handles_buf_cap",    type="size"},
+    {name="out_handles_count",  type="size_ptr"},
+]
+returns    = "status"
+can_block  = true
+
+[[syscall]]
+number     = 30
+name       = "open_at"
+pillar     = "05-filesystem"
+summary    = "Open a file relative to a directory handle. Path must NOT be absolute."
+args       = [
+    {name="dir_h",          type="handle"},
+    {name="relpath",        type="const_char_ptr"},
+    {name="open_flags",     type="u32"},
+    {name="resolve_flags",  type="u32"},
+    {name="out_file_h",     type="handle_ptr"},
+]
+returns    = "status"
+can_block  = true
+
+[[syscall]]
+number     = 40
+name       = "file_read"
+pillar     = "06-io"
+summary    = "Read bytes from a File handle. Blocking. offset=-1 means use current position."
+args       = [
+    {name="file_h",   type="handle"},
+    {name="buf",      type="void_ptr"},
+    {name="n",        type="size"},
+    {name="offset",   type="i64"},
+    {name="out_n",    type="size_ptr"},
+]
+returns    = "status"
+can_block  = true
+
+[[syscall]]
+number     = 41
+name       = "file_write"
+pillar     = "06-io"
+summary    = "Write bytes to a File handle. Blocking."
+args       = [
+    {name="file_h",   type="handle"},
+    {name="buf",      type="const_void_ptr"},
+    {name="n",        type="size"},
+    {name="offset",   type="i64"},
+    {name="out_n",    type="size_ptr"},
+]
+returns    = "status"
+can_block  = true
+
+[[syscall]]
+number     = 50
+name       = "vm_alloc"
+pillar     = "07-memory"
+summary    = "Allocate anonymous virtual memory. Rejects W|X prot."
+args       = [
+    {name="len",      type="size"},
+    {name="prot",     type="u32"},
+    {name="out_base", type="void_ptr_ptr"},
+]
+returns    = "status"
+can_block  = true
+
+[[syscall]]
+number     = 60
+name       = "dev_op"
+pillar     = "08-drivers"
+summary    = "Issue a structured device operation. op_code is namespaced per device class."
+args       = [
+    {name="file_h",     type="handle"},
+    {name="op_code",    type="u32"},
+    {name="args_ptr",   type="void_ptr"},
+    {name="args_len",   type="size"},
+    {name="out_ret",    type="i64_ptr"},     # may be NULL if op produces no scalar return
+]
+returns    = "status"
+can_block  = true

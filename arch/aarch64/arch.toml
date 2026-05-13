@@ -1,0 +1,12 @@
+# arch/aarch64/arch.toml — consumed by tools/gen_build.py.
+
+[arch]
+triple = "aarch64-elf"
+
+[compile]
+cflags  = ["-mgeneral-regs-only", "-mcpu=cortex-a72"]   # Pi 4 = Cortex-A72
+asflags = []
+
+[link]
+ldscript    = "arch/aarch64/kernel.ld"
+kernel_base = "0xffff000000080000"
