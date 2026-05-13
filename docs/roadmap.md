@@ -2,6 +2,8 @@
 
 Tracked at the version level. Each version is "what's in scope" not a date. The work to land v1 alone is many weeks of full-time effort.
 
+For the **order to build v1 in**, see [implementation.md](implementation.md). This file is the *what*; that one is the *how*.
+
 ## v1 — "it boots and you can run things"
 
 The goal: in QEMU, on both x86_64 and aarch64, the kernel boots, mounts an initramfs, and drops into `/bin/sh`. From the shell you can run `echo`, `cat`, `ls`, `pwd`, `mkdir`.
@@ -36,7 +38,7 @@ Explicitly not in v1:
 ## v2 — "it has disks and a service manager"
 
 - virtio-blk driver (works in QEMU).
-- A simple on-disk FS ("skfs"). Tree-of-extents inodes; no journaling.
+- **skfs v2.0** on-disk filesystem (see pillar 13). ext2-lineage, 64-bit, UTF-8 names, xattrs from day one, no journaling yet. Mount-dirty → refuse to mount writable.
 - `fs_mount` from a block device.
 - Reaper-style PID 1 (~300 LOC). Separate `/sbin/svc-manager` process.
 - Service config format (decide: TOML vs. s-expressions; YAML noted as a possibility).
@@ -49,7 +51,21 @@ Explicitly not in v1:
 - A QEMU-based test runner: `just test` boots, runs `/bin/test-runner`, exits with status.
 - Optional: stdio `FILE*` layer, `getenv`/`setenv`.
 
+## v2.1 — "the filesystem doesn't corrupt on power loss"
+
+Focused milestone after v2.0 ships. Single deliverable:
+
+- **skfs metadata journaling** (see pillar 13). Write-ahead journal in a reserved disk region; metadata operations wrapped in transactions; mount-time replay of committed but unapplied transactions. Bumps `version_minor` to 1. ~800 LOC.
+
+## v2.2+ — "scheduling stops being a placeholder"
+
+- Real scheduler policy, if necessary. TBD. Replaces the v1 round-robin.
+- Possibly: hash-indexed directories in skfs, extent-based file addressing.
+
 ## v3+ — open directions
+
+(For scheduler/skfs-specific v3 ideas see pillars 12 and 13.)
+
 
 None committed. Listed in rough order of plausibility:
 

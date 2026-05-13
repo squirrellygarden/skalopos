@@ -6,14 +6,15 @@ This file is your orientation when working in this repo. It's deliberately short
 
 Skalapos is a toy POSIX-evolution OS in freestanding C. Monolithic kernel. ARM64 (Pi 4) + x86_64. Cross-compile + QEMU from day one. See [`README.md`](README.md) and [`docs/overview.md`](docs/overview.md).
 
-The project is in design phase. The eleven core decisions are locked in and documented per pillar in [`docs/pillars/`](docs/pillars/). Read them before suggesting anything that touches an ABI.
+The project is in design phase. The thirteen core decisions are locked in and documented per pillar in [`docs/pillars/`](docs/pillars/). Read them before suggesting anything that touches an ABI.
 
 ## Where to look first
 
 1. [`docs/overview.md`](docs/overview.md) — five-minute mental model.
 2. [`docs/pillars/`](docs/pillars/) — one file per locked-in decision, with **goals / contract / pseudocode / rationale / v2+ direction** sections.
-3. [`schemas/`](schemas/) — the single source of truth for syscalls and status codes. Anything that changes the ABI changes this file first; codegen does the rest.
-4. The subdirectory `CLAUDE.md` files in [`kernel/`](kernel/), [`userland/`](userland/), [`arch/`](arch/), [`tools/`](tools/) — task-specific guidance.
+3. [`docs/implementation.md`](docs/implementation.md) — suggested v1 build order (phases 0-4, ≈7-9 weeks of work). Consult this when starting any implementation task; the phase tells you what other pieces must already be in place.
+4. [`schemas/`](schemas/) — the single source of truth for syscalls and status codes. Anything that changes the ABI changes this file first; codegen does the rest.
+5. The subdirectory `CLAUDE.md` files in [`kernel/`](kernel/), [`userland/`](userland/), [`arch/`](arch/), [`tools/`](tools/) — task-specific guidance.
 
 ## How to add or change a syscall
 
@@ -59,6 +60,9 @@ These have been considered and explicitly rejected. If a piece of work seems to 
 - **No uid/gid privilege checks in v1.** Privilege deferred entirely. See pillar 9.
 - **No GNU Make.** Build is Python-generated Ninja driven by Justfile. See pillar 10.
 - **No POSIX-compat libc.** Skalapos's libc is its own; no goal of porting glibc users. See pillar 11.
+- **No POSIX zombies.** A dead process delivers its exit status as a channel message; `proc_wait` is a convenience wrapper over the wait list. See pillar 12.
+- **No SMP in v1.** Single CPU. Locking discipline introduced subsystem-by-subsystem when SMP work begins in v2. See pillar 12.
+- **No FAT32, exFAT, or ext2 byte-for-byte compat.** v2's on-disk FS is `skfs`, ext2-lineage with sane modern choices. See pillar 13.
 
 ## Coding conventions (terse)
 

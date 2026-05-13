@@ -10,7 +10,7 @@ Skalapos (σκάλοπος, "of the mole") is a toy operating system designed as
 
 ## What's in here
 
-- [`docs/`](docs/) — the design. Start with [`docs/overview.md`](docs/overview.md). One file per design pillar lives under [`docs/pillars/`](docs/pillars/).
+- [`docs/`](docs/) — the design. Start with [`docs/overview.md`](docs/overview.md). One file per design pillar lives under [`docs/pillars/`](docs/pillars/). When you're ready to start writing code, [`docs/implementation.md`](docs/implementation.md) gives the suggested v1 build order.
 - [`schemas/`](schemas/) — single sources of truth for the syscall ABI and status codes.
 - [`arch/`](arch/), [`kernel/`](kernel/), [`userland/`](userland/) — the eventual source tree, currently with placeholder files and per-area `CLAUDE.md` orientation notes.
 - [`tools/`](tools/) — host-side helpers: build-system generator, initramfs packer.
@@ -18,7 +18,7 @@ Skalapos (σκάλοπος, "of the mole") is a toy operating system designed as
 
 ## The five-minute pitch
 
-Skalapos changes POSIX in eleven ways, all aimed at flattening the design — removing categories of bugs and special cases, not adding novelty. The pillars:
+Skalapos changes POSIX in thirteen ways, all aimed at flattening the design — removing categories of bugs and special cases, not adding novelty. The pillars:
 
 | # | Pillar | Skalapos's answer | Replaces |
 |---|---|---|---|
@@ -33,6 +33,8 @@ Skalapos changes POSIX in eleven ways, all aimed at flattening the design — re
 | 9 | Init | PID 1 is `/bin/sh` in v1; reaper + separate service manager in v2 | System V init / systemd sprawl |
 | 10 | Build | GCC freestanding cross-toolchain + Python-generated Ninja + Justfile | Make recursion |
 | 11 | Userland | Tiny libc, tiny shell, a few utilities; bump allocator until v2/v3 | glibc, busybox |
+| 12 | Scheduling | Threads as scheduling unit; round-robin v1; user-preemptive non-preemptive-kernel; single CPU v1, SMP v2 | POSIX zombies, scheduler sprawl |
+| 13 | skfs (v2) | On-disk FS: ext2-lineage, 64-bit, UTF-8, xattrs, hex-readable; journaling at v2.1 | FAT32's warts |
 
 Details, rationale, and contracts in [`docs/pillars/`](docs/pillars/).
 

@@ -35,6 +35,8 @@ There is no libc in the kernel. The few string/memory primitives we need live in
 3. **No blocking syscalls inside the kernel itself.** Kernel code runs to completion or sleeps via the scheduler primitives; it never "blocks on a channel."
 4. **Status is the only error return type from kernel-internal functions that can fail.** No `errno`, no negative pointer tricks, no setting a per-thread flag.
 5. **Handles are never bare pointers.** A `handle_t` only makes sense relative to a specific process's handle table. Internal kernel code uses `struct file*`, `struct channel*`, etc., directly.
+6. **v1 kernel is non-preemptive and single-CPU.** No locking in kernel data structures *except* for synchronization between IRQ handlers and the synchronous kernel path (use IRQ disable/enable critical sections). Adding mutex/spinlock infrastructure now is wrong — it'll be designed properly during the v2 SMP pass. See [`../docs/pillars/12-scheduling.md`](../docs/pillars/12-scheduling.md).
+7. **Blocking always goes through a `wait_list`.** Every blocking syscall follows: acquire the relevant IRQ-disabled critical section, check the condition in a loop, `wait_list_add` + `scheduler_block` if false, re-check on wake. Never invent a one-off blocking mechanism.
 
 ## How to add a syscall
 

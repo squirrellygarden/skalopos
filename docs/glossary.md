@@ -24,7 +24,7 @@ Terms used throughout the Skalapos docs and source.
 | **multiboot** | Bootloader protocol (versions 1 and 2). x86_64 Skalapos kernel embeds a multiboot header so GRUB / QEMU's `-kernel` can load it. |
 | **PID 1** | The first userland process. The kernel constructs it directly because it has no parent. In v1: `/bin/sh`. In v2: a reaper supervisor. |
 | **PL011** | The UART on the Raspberry Pi 4 (and most ARM SoCs). Used as the console on aarch64. |
-| **POSIX wart** | Anything in POSIX that Skalapos is replacing rather than keeping. The eleven pillars enumerate them. |
+| **POSIX wart** | Anything in POSIX that Skalapos is replacing rather than keeping. The pillars enumerate them. |
 | **proc_chroot** | Skalapos's opt-in sandbox primitive. Replaces a process's ROOT_DIR with a given Directory handle. Irreversible. |
 | **rights bits** | A `uint32_t` reserved field on each handle entry. Zero in v1; ignored. Pre-staged for a future capability-lite model. |
 | **ROOT_DIR / CWD_DIR** | Specific handle slots in every process. libc uses them to translate POSIX-style absolute and relative path strings into `*_at` syscall calls. |
@@ -36,3 +36,13 @@ Terms used throughout the Skalapos docs and source.
 | **typed handle** | A handle whose kernel-side entry carries a type (and optionally subtype) tag. Lets the syscall edge reject wrong-typed access. |
 | **virtio-blk** | A QEMU-friendly paravirtualized block device. Planned as v2's first real block driver. |
 | **W^X** | "Write XOR Execute". DEP policy. Rejected at `vm_alloc` and `vm_protect`. |
+| **wait list** | The per-object kernel data structure tracking which threads are blocked waiting for an event on that object. Embedded directly in channels, processes, timers, etc. See pillar 12. |
+| **runqueue** | The list of `THREAD_RUNNABLE` threads the scheduler picks from. v1: one global list, round-robin. v2: per-CPU lists with work stealing. |
+| **time slice** | The maximum time a thread runs before the scheduler considers preempting it. v1: 10 ms, fixed. |
+| **MLFQ** | Multi-level feedback queue. The planned v2.2+ replacement for round-robin scheduling. |
+| **BSP** | Bootstrap processor. The CPU the kernel boots on. v1 ignores all other cores. |
+| **skfs** | Skalapos's v2 on-disk filesystem. Roughly "ext2 with sane modern choices, hex-readable by design." See pillar 13. |
+| **inode** | The fixed-size per-file metadata record in skfs. 256 bytes; lives in the inode table region. |
+| **mkfs** | The host tool (or eventual guest tool) that formats a block device into a skfs filesystem. Tool sets the journal size, inode count, etc. |
+| **journal (skfs)** | A v2.1 ring-buffer region of the disk where metadata writes are recorded before being applied to their actual locations. Enables crash-safe metadata. |
+| **xattr** | Extended attribute. Skfs reserves a block per inode to hold name/value attribute pairs. v2 stores them; consumers come later. |

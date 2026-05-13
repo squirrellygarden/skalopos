@@ -21,7 +21,7 @@ Every pillar is judged by whether it removes a category of bug or special case. 
 
 When you find yourself adding a mechanism, ask: which existing mechanism does it replace?
 
-## The eleven pillars
+## The Pillars
 
 | # | Pillar | One-line summary | Detail |
 |---|---|---|---|
@@ -36,6 +36,8 @@ When you find yourself adding a mechanism, ask: which existing mechanism does it
 | 9 | Init | v1: PID 1 is `/bin/sh`. v2: tiny reaper + separate service manager. Privilege deferred. | [09-init.md](pillars/09-init.md) |
 | 10 | Build | GCC freestanding cross-toolchain; Python-generated Ninja; Justfile on top. | [10-build.md](pillars/10-build.md) |
 | 11 | Userland | Tiny libc (~15 functions), tiny shell, a few utilities. Bump allocator in v1; real malloc deferred. | [11-userland.md](pillars/11-userland.md) |
+| 12 | Scheduling | Thread is the scheduling unit. Round-robin v1 (placeholder); MLFQ v2. User-preemptive, kernel non-preemptive. Single CPU v1, SMP v2. Per-object wait lists. | [12-scheduling.md](pillars/12-scheduling.md) |
+| 13 | skfs (v2 FS) | On-disk filesystem replacing the in-memory initramfs. ext2-lineage with sane modern choices (64-bit, UTF-8, xattrs). Metadata journaling lands at v2.1. Hex-readable by design. | [13-skfs.md](pillars/13-skfs.md) |
 
 ## How the pillars compose
 

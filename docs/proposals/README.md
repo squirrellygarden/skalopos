@@ -25,6 +25,6 @@ draft / accepted / rejected / superseded by <link>
 
 ## Why proposals exist
 
-The eleven pillars are explicit commitments. Implementing against them is straightforward work. *Changing* them is a design decision that needs to be visible, debated, and recorded. Without that discipline, the design drifts; with it, every change is intentional.
+The pillars are explicit commitments. Implementing against them is straightforward work. *Changing* them is a design decision that needs to be visible, debated, and recorded. Without that discipline, the design drifts; with it, every change is intentional.
 
 Old proposals (rejected or superseded) stay in this directory. They're a record of "we already thought about this," which saves future-you from reopening the same question.
