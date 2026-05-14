@@ -3,7 +3,11 @@
 # Every handle type that the kernel recognizes is declared here. tools/gen_syscalls.py
 # reads this file and emits:
 #   - kernel/handle/types_generated.h    (the enum handle_type_t)
+<<<<<<< HEAD
 #   - userland/libc/include/skalops/handle.h (public handle type definitions)
+=======
+#   - userland/libc/include/skalaps/handle.h (public handle type definitions)
+>>>>>>> 4c45de9 (Add handle schema)
 #
 # Handle types are permanent ABI. To add a new type, append it with the next
 # sequential value. NEVER renumber.
