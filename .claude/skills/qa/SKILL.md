@@ -43,6 +43,7 @@ Do a thorough general code review first — correctness, logic, edge cases, reso
 - [ ] 4-space indent, no tabs
 - [ ] Opening brace on the same line as the control or function statement
 - [ ] `snake_case` for functions and variables; `ALL_CAPS` for macros and enum members
+<<<<<<< HEAD
 - [ ] One public header per module under `<skl/...>`
 =======
 - [ ] `clang-format` clean (`.clang-format` at repo root): 4-space indent, same-line braces, pointer as `void * foo`, column limit ~100
@@ -52,7 +53,6 @@ Do a thorough general code review first — correctness, logic, edge cases, reso
 - [ ] No `typedef struct` without justification
 - [ ] No indent-alignment of variable declarations (only `#define`/`#include` groups)
 - [ ] One public header per module under `<skalops/...>`
->>>>>>> 157367e (fixup! skl -> skalaps; chan -> chnl)
 - [ ] Every public function has a one-line `///` comment stating its contract
 - [ ] No comments that merely describe what the code does; only non-obvious *why* comments
 
