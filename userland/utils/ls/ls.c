@@ -3,9 +3,9 @@
 // List the entries of a directory. No flags in v1; just names, one per line.
 // If no argument, list cwd.
 
-#include <skl/spawn.h>
-#include <skl/handle.h>
-// #include <skl/fs.h>     // dir_open_at, dir_read
+#include <skalops/spawn.h>
+#include <skalops/handle.h>
+// #include <skalops/fs.h>     // dir_open_at, dir_read
 
 int main(int argc, char** argv, char** envp) {
     (void)envp;

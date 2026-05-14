@@ -41,7 +41,7 @@ PID 1 is the one process whose handles the kernel populates directly, because it
 | 3 (stderr) | dup of slot 1 | |
 | `SLOT_ROOT_DIR`     | `H_DIR` to `/` | libc resolves absolute paths via this |
 | `SLOT_CWD_DIR`      | `H_DIR` to `/` | libc resolves relative paths via this |
-| `SLOT_CONTROL_CHAN` | `H_CHAN` (no peer) | Lifecycle messages go here; nobody can send to PID 1 from outside in v1 |
+| `SLOT_CONTROL_CHNL` | `H_CHNL` (no peer) | Lifecycle messages go here; nobody can send to PID 1 from outside in v1 |
 
 These slot numbers are part of the ABI; libc reads them on startup. All other processes inherit handles via the explicit `handles_to_pass` list in `proc_spawn` (pillar 2).
 
@@ -57,7 +57,7 @@ int main(void) {
 
     for (;;) {
         evt_t msg;
-        chan_recv(control_chan, &msg, sizeof msg, ...);
+        chnl_recv(control_chnl, &msg, sizeof msg, ...);
 
         switch (msg.kind) {
         case EVT_TERMINATED:
@@ -72,7 +72,7 @@ int main(void) {
             system_shutdown(SHUTDOWN_HALT);
             // (system_shutdown does not return)
         default:
-            log_info("unhandled control-chan msg: kind=%u", msg.kind);
+            log_info("unhandled control-chnl msg: kind=%u", msg.kind);
         }
     }
 }

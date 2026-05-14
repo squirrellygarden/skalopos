@@ -47,10 +47,10 @@ The kernel validates: handle's subtype must equal the op code's high byte, else 
 
 ### Per-class headers
 
-Every op code is declared in a per-class header in `<skl/dev/>` along with its argument and return struct:
+Every op code is declared in a per-class header in `<skalops/dev/>` along with its argument and return struct:
 
 ```c
-// userland/libc/include/skl/dev/console.h
+// userland/libc/include/skalops/dev/console.h
 typedef struct { uint32_t mode; } console_set_mode_args_t;
 #define CONSOLE_SET_MODE  0x01000001
 
@@ -151,7 +151,7 @@ Networking (virtio-net or otherwise), USB, sound, framebuffer beyond text mode, 
 
 ```c
 // kernel/driver/null.c — synthetic device example
-#include <skl/dev/null.h>
+#include <skalops/dev/null.h>
 #include "../driver/driver.h"
 #include "../driver/devfs.h"
 

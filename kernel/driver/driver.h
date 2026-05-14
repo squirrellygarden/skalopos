@@ -2,8 +2,8 @@
 //
 // See docs/pillars/08-drivers.md.
 
-#ifndef SKL_KERNEL_DRIVER_DRIVER_H
-#define SKL_KERNEL_DRIVER_DRIVER_H
+#ifndef SKALOPS_KERNEL_DRIVER_DRIVER_H
+#define SKALOPS_KERNEL_DRIVER_DRIVER_H
 
 #include <stdint.h>
 #include <stddef.h>

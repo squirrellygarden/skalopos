@@ -4,7 +4,7 @@
 // materialize a path from a directory handle (walk parents recursively); not
 // trivial but small.
 
-#include <skl/spawn.h>
+#include <skalops/spawn.h>
 
 int main(int argc, char** argv, char** envp) {
     (void)argc; (void)argv; (void)envp;

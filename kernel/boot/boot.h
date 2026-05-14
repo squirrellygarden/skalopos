@@ -4,8 +4,8 @@
 // hands it (multiboot info on x86; DTB pointer + initramfs region on aarch64),
 // then calls kmain(boot_info_t*).
 
-#ifndef SKL_KERNEL_BOOT_BOOT_H
-#define SKL_KERNEL_BOOT_BOOT_H
+#ifndef SKALOPS_KERNEL_BOOT_BOOT_H
+#define SKALOPS_KERNEL_BOOT_BOOT_H
 
 #include <stdint.h>
 #include <stddef.h>

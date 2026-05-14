@@ -12,7 +12,7 @@ See [`../../docs/pillars/11-userland.md`](../../docs/pillars/11-userland.md) for
 
 Header layout:
 
-- `include/skl/*.h` — Skalapos-specific primitives (handles, spawn, channels, dev ops).
+- `include/skalops/*.h` — Skalapos-specific primitives (handles, spawn, channels, dev ops).
 - `include/sys/*.h` — syscall-adjacent low-level (status codes, raw syscall numbers).
 - `include/<name>.h` — ISO-C-ish (string.h, stdio.h, stdlib.h, etc.).
 
@@ -31,9 +31,9 @@ A real allocator is planned for v2 or v3. The libc ABI (`malloc`/`free`) is stab
 - `FILE*` and friends. v1 stdio uses raw handles.
 - `errno` and all functions that touch it. Errors come back as `status_t`.
 - `getenv` / `setenv`. `envp` is passed to `main` but not interpreted.
-- Threads (`pthread_*`). The thread API is `<skl/thread.h>`; no pthread shim.
+- Threads (`pthread_*`). The thread API is `<skalops/thread.h>`; no pthread shim.
 - Locales, wide chars, multibyte, complex math.
-- Signal handlers. Faults use `<skl/fault.h>`; everything else is channels.
+- Signal handlers. Faults use `<skalops/fault.h>`; everything else is channels.
 - Networking. None.
 
 ## How to add a libc function

@@ -15,13 +15,13 @@
 //     non-zero, loop.
 
 #include <stdint.h>
-#include <skl/handle.h>
-#include <skl/spawn.h>
+#include <skalops/handle.h>
+#include <skalops/spawn.h>
 
 // Headers that don't yet exist but will:
 //   #include <stdio.h>             // printf, fputs
 //   #include <string.h>            // strlen, strcmp, memcpy
-//   #include <skl/fs.h>            // open_at, dir_open_at, mkdir_at, …
+//   #include <skalops/fs.h>            // open_at, dir_open_at, mkdir_at, …
 
 static char line_buf[1024];
 

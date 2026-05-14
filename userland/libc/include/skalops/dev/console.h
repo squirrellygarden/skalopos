@@ -1,13 +1,13 @@
-// userland/libc/include/skl/dev/console.h
+// userland/libc/include/skalops/dev/console.h
 //
 // Console device-class ops. See docs/pillars/08-drivers.md.
 // Op codes have the device-class byte in their high 8 bits (0x01 = CONSOLE).
 
-#ifndef SKL_DEV_CONSOLE_H
-#define SKL_DEV_CONSOLE_H
+#ifndef SKALOPS_DEV_CONSOLE_H
+#define SKALOPS_DEV_CONSOLE_H
 
 #include <stdint.h>
-#include <skl/handle.h>
+#include <skalops/handle.h>
 #include <sys/status.h>
 
 #define DEV_CLASS_CONSOLE        0x01u
@@ -27,7 +27,7 @@ typedef struct {
 } console_size_t;
 
 // Inline wrappers below are convenience; they call dev_op underneath.
-// (dev_op declared in <skl/handle.h>-adjacent header — TODO add <skl/dev.h>.)
+// (dev_op declared in <skalops/handle.h>-adjacent header — TODO add <skalops/dev.h>.)
 
 status_t dev_op(handle_t h, uint32_t op_code, void* args, size_t args_len, int64_t* out_ret);
 

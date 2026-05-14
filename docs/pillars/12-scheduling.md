@@ -215,7 +215,7 @@ void wait_list_wake_one(struct wait_list* wl) {
 - **Real scheduler policy.** Most likely MLFQ — it's the right complexity/quality tradeoff for a non-server OS. Tunable boost interval, per-class slice lengths. Design pass starts when v1 ships.
 - **SMP.** Per-CPU runqueues, work stealing, cross-CPU wakeup via IPIs, locking discipline added subsystem-by-subsystem. Pi 4's 4 cores become real.
 - **Preemptible kernel.** Revisit when SMP is in. Almost certainly stays non-preemptive for a long time after SMP.
-- **`chan_recv_any` (multi-channel select).** Adds a small "subscription" abstraction: thread holds slots on multiple wait lists; whichever wakes it removes it from the others. ~30 LOC on top of v1's wait_list primitive.
+- **`chnl_recv_any` (multi-channel select).** Adds a small "subscription" abstraction: thread holds slots on multiple wait lists; whichever wakes it removes it from the others. ~30 LOC on top of v1's wait_list primitive.
 - **Userland concurrency primitives.** If futexes ever come up, they're a new handle type (`H_FUTEX`) with an embedded wait list. Same mechanism, scaled up.
 - **CPU affinity / pinning.** Once SMP exists. Not before.
 - **Priorities / nice-ness.** Most schedulers grow them; we'll see if we need them. POSIX `nice` is a fine API to copy if so.

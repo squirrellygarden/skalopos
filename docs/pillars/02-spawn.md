@@ -37,7 +37,7 @@ Semantics:
 typedef struct {
     handle_t   root_dir;        // Directory handle; child's ROOT_DIR. NULL → inherit parent's.
     handle_t   cwd_dir;         // Directory handle; child's CWD_DIR. NULL → inherit parent's.
-    handle_t   control_chan;    // Channel handle to use as the child's control channel.
+    handle_t   control_chnl;    // Channel handle to use as the child's control channel.
                                 // NULL → kernel creates a new one and passes it back via the
                                 // child's handle table at a known slot (see init pillar).
     uint32_t   flags;           // reserved
@@ -86,7 +86,7 @@ status_t proc_spawn_impl(...) {
     }
     handle_install(p->handles, SLOT_ROOT_DIR,    opts->root_dir    ?: parent_root_dir);
     handle_install(p->handles, SLOT_CWD_DIR,     opts->cwd_dir     ?: parent_cwd_dir);
-    handle_install(p->handles, SLOT_CONTROL_CHAN, opts->control_chan ?: new_chan);
+    handle_install(p->handles, SLOT_CONTROL_CHNL, opts->control_chnl ?: new_chnl);
 
     // 5. Build argv/envp on the new stack per ELF ABI for the target arch.
     elf_setup_stack(p, argv, envp);
@@ -109,6 +109,6 @@ status_t proc_spawn_impl(...) {
 
 ## v2+ direction
 
-- **Posthumous handle delivery.** If a process is spawned with `control_chan = NULL` and the kernel auto-creates the channel, the parent currently has to look it up via the Process handle (`proc_get_control_chan`). v2 could return a tuple `(out_proc_h, out_control_chan_h)` instead, removing a syscall.
+- **Posthumous handle delivery.** If a process is spawned with `control_chnl = NULL` and the kernel auto-creates the channel, the parent currently has to look it up via the Process handle (`proc_get_control_chnl`). v2 could return a tuple `(out_proc_h, out_control_chnl_h)` instead, removing a syscall.
 - **Spawn-time resource limits.** `spawn_opts_t.flags` is reserved for things like "this process cannot create new threads," "max VM size," etc. Not in v1; trivial to add.
 - **`proc_exec_self`-style hot reload.** Replace the current process's image with a new one, keeping the handle table. Useful for service managers. Definitely not v1.

@@ -2,8 +2,8 @@
 //
 // See docs/pillars/04-events.md.
 
-#ifndef SKL_KERNEL_CHANNEL_CHANNEL_H
-#define SKL_KERNEL_CHANNEL_CHANNEL_H
+#ifndef SKALOPS_KERNEL_CHANNEL_CHANNEL_H
+#define SKALOPS_KERNEL_CHANNEL_CHANNEL_H
 
 #include <stdint.h>
 #include <stddef.h>

@@ -8,7 +8,7 @@ Terms used throughout the Skalapos docs and source.
 | **`AT_NOFOLLOW`** | Resolve-flag: the final path component must not be a symlink. |
 | **`AT_NOSYMLINKS`** | Resolve-flag: no symlink may appear anywhere in the resolution. |
 | **bump allocator** | The v1 userland `malloc`. Advances a cursor in a fixed BSS arena. `free` is a no-op. Leaks; intentional for v1. |
-| **channel** | A bounded MPMC kernel-managed queue of typed messages. Handles of type `H_CHAN`. The primary async-event mechanism. |
+| **channel** | A bounded MPMC kernel-managed queue of typed messages. Handles of type `H_CHNL`. The primary async-event mechanism. |
 | **control channel** | A specific channel held by every process. The kernel posts lifecycle messages (child exit, fault, kill request) to it. |
 | **CPIO** | Old Unix archive format. v1's initramfs is a newc-format CPIO blob handed to the kernel by the bootloader. |
 | **DEP** | Data Execution Prevention — Skalapos enforces by rejecting `W|X` page protections. |

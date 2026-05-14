@@ -1,13 +1,13 @@
-// userland/libc/include/skl/spawn.h
+// userland/libc/include/skalops/spawn.h
 //
 // Process and thread creation. See docs/pillars/02-spawn.md.
 
-#ifndef SKL_SPAWN_H
-#define SKL_SPAWN_H
+#ifndef SKALOPS_SPAWN_H
+#define SKALOPS_SPAWN_H
 
 #include <stdint.h>
 #include <stddef.h>
-#include <skl/handle.h>
+#include <skalops/handle.h>
 #include <sys/status.h>
 
 typedef struct {

@@ -2,8 +2,8 @@
 //
 // See docs/pillars/12-scheduling.md.
 
-#ifndef SKL_KERNEL_SCHED_SCHED_H
-#define SKL_KERNEL_SCHED_SCHED_H
+#ifndef SKALOPS_KERNEL_SCHED_SCHED_H
+#define SKALOPS_KERNEL_SCHED_SCHED_H
 
 #include <stdint.h>
 #include <stddef.h>

@@ -5,15 +5,14 @@
 - Every reference a process holds to a kernel object goes through a single, uniform mechanism.
 - Type confusion (reading a `Channel` as if it were a `File`) is caught at the syscall edge with a typed error, not later in driver code.
 - The `ioctl`/`fcntl`/`prctl` family of grab-bag syscalls does not need to exist.
-- The handle model leaves room for a rights field to be added later without breaking the ABI.
 
 ## Contract
 
-A **handle** is a non-negative `int32_t` identifying an entry in the calling process's handle table. The same numeric value in two different processes refers to different objects. Handles are not transferable as bare integers; to share an object with another process, the holder passes the handle via [`spawn`](02-spawn.md) or [`chan_send`](04-events.md), which the kernel translates into an entry in the recipient's table.
+A **handle** is a `uint32_t` identifying an entry in the calling process's handle table. The same numeric value in two different processes refers to different objects. Handles are not transferable as bare integers; to share an object with another process, the holder passes the handle via [`spawn`](02-spawn.md) or [`chnl_send`](04-events.md), which the kernel translates into an entry in the recipient's table.
 
 Each handle-table entry carries:
 
-- **A type tag** — one of `H_FILE`, `H_DIR`, `H_CHAN`, `H_PROC`, `H_THREAD`, `H_TIMER`, `H_SHM`. (Future types are added by extending the enum; old code does not break.)
+- **A type tag** — one of `H_FILE`, `H_DIR`, `H_CHNL`, `H_PROC`, `H_THREAD`, `H_TIMER`, `H_SHM`. (Future types are added by extending the enum; old code does not break.)
 - **A subtype tag, valid only for `H_FILE`** — a `device_class` enum value (`DEV_NONE` for regular files, `DEV_CONSOLE`, `DEV_BLOCK`, `DEV_NET`, `DEV_FB`, `DEV_INPUT`, …). The kernel uses this to validate the op code passed to [`dev_op`](08-drivers.md).
 - **A pointer to the kernel-side object** (e.g., a `struct file`, `struct channel`, `struct process`).
 - **A reserved rights field** (zero in v1; not validated, but laid out so it can be enforced later).
@@ -52,7 +51,7 @@ typedef enum {
     H_NONE = 0,
     H_FILE,
     H_DIR,
-    H_CHAN,
+    H_CHNL,
     H_PROC,
     H_THREAD,
     H_TIMER,

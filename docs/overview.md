@@ -47,12 +47,12 @@ A single example tracing through them:
 
 1. Shell reads the line into a fixed-size buffer (pillar 11 — no malloc dependency in PID 1).
 2. Shell calls `spawn("/bin/cat", argv=["cat","/etc/hosts"], env=[], handles=[stdin, stdout, stderr, root_dir, cwd_dir])` (pillar 2). The child receives exactly those handles, nothing more.
-3. The child's libc startup unpacks the handles, exposes them via `<skl/handle.h>` and the standard FILE* objects.
+3. The child's libc startup unpacks the handles, exposes them via `<skalaps/handle.h>` and the standard FILE* objects.
 4. `cat` calls `open_at(root_dir_h, "etc/hosts", O_RDONLY, AT_BENEATH)` (pillar 5). libc strips the leading `/` and translates the path internally; the kernel never sees an absolute path string.
 5. Kernel resolves the path component-by-component, refusing symlink escapes because of `AT_BENEATH`. Returns `(STATUS_OK, file_h)` (pillar 3). Handle has type tag `File`, no device class (pillar 1).
 6. `cat` loops: `file_read(file_h, buf, 4096, …)` → `file_write(stdout_h, buf, n_read, …)` (pillar 6 sync I/O; pillar 8 streaming).
 7. EOF reached. `cat` calls `proc_exit(0)`. Kernel posts a `Terminated{pid, status}` message to the parent shell's control channel (pillar 4).
-8. Shell `chan_recv`s the message and prints a new prompt.
+8. Shell `chnl_recv`s the message and prints a new prompt.
 
 No `fork`. No `errno`. No `ioctl`. No `select`. No `mmap` flag soup. Each step is one well-named operation with a typed result.
 

@@ -2,8 +2,8 @@
 //
 // See docs/pillars/01-handles.md for the design.
 
-#ifndef SKL_KERNEL_HANDLE_HANDLE_H
-#define SKL_KERNEL_HANDLE_HANDLE_H
+#ifndef SKALOPS_KERNEL_HANDLE_HANDLE_H
+#define SKALOPS_KERNEL_HANDLE_HANDLE_H
 
 #include <stdint.h>
 #include <stddef.h>
@@ -15,7 +15,7 @@ typedef enum {
     H_NONE   = 0,
     H_FILE   = 1,
     H_DIR    = 2,
-    H_CHAN   = 3,
+    H_CHNL   = 3,
     H_PROC   = 4,
     H_THREAD = 5,
     H_TIMER  = 6,

@@ -20,8 +20,8 @@ You are implementing a feature or fixing a bug in **Skalapos**, a toy POSIX-evol
 Apply all of the following — these are in addition to general software engineering best practices, not instead of them:
 
 - **Language:** C11, freestanding (`-ffreestanding -nostdlib`). No hosted-environment assumptions.
-- **Style:** 4-space indent, opening brace on same line, `snake_case` for functions and variables, `ALL_CAPS` for macros and enum members.
-- **Headers:** One public header per module under `<skl/...>`. Every public function gets a one-line `///` doc comment stating its contract.
+- **Style:** `clang-format` is the arbiter of mechanical formatting (indent, braces, pointer alignment, column limit). Run it before finishing. `snake_case` for functions/variables; `ALL_CAPS` for macros and enum members. `//` comments only — never `/* */`. Pointer style: `void * foo`. Explicit-size types (`uint32_t`, `uint64_t`, etc.); `char` only for ASCII.
+- **Headers:** One public header per module under `<skalops/...>`. Every public function gets a one-line `///` doc comment stating its contract. No `typedef struct` without a strong reason.
 - **Comments:** Only when the *why* is non-obvious. Never explain what the code does.
 - **Errors:** Syscalls return `(Status, Value)` pairs. No `-1` sentinel returns. No `errno`. Status codes are typed enums per subsystem.
 - **No forbidden patterns** — do not introduce any of the following (these were explicitly rejected in the design):

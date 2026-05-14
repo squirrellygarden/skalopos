@@ -19,8 +19,8 @@
 //     wait_list_wake_one(&obj->waiters);   // or _wake_all
 //     irq_enable();
 
-#ifndef SKL_KERNEL_SCHED_WAIT_H
-#define SKL_KERNEL_SCHED_WAIT_H
+#ifndef SKALOPS_KERNEL_SCHED_WAIT_H
+#define SKALOPS_KERNEL_SCHED_WAIT_H
 
 #include "sched.h"
 

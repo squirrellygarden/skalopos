@@ -95,13 +95,13 @@ TYPE_MAP = {
 
 def gen_syscall_numbers_h(syscalls):
     out = ["// DO NOT EDIT — generated from schemas/syscalls.toml",
-           "#ifndef SKL_SYSCALL_NUMBERS_H",
-           "#define SKL_SYSCALL_NUMBERS_H",
+           "#ifndef SKALOPS_SYSCALL_NUMBERS_H",
+           "#define SKALOPS_SYSCALL_NUMBERS_H",
            ""]
     for s in syscalls:
-        out.append(f"#define SKL_SYS_{s['name'].upper():32s} {s['number']}")
+        out.append(f"#define SKALOPS_SYS_{s['name'].upper():32s} {s['number']}")
     out.append("")
-    out.append(f"#define SKL_SYS_COUNT_DECLARED {len(syscalls)}")
+    out.append(f"#define SKALOPS_SYS_COUNT_DECLARED {len(syscalls)}")
     out.append("")
     out.append("#endif")
     return "\n".join(out) + "\n"
@@ -109,8 +109,8 @@ def gen_syscall_numbers_h(syscalls):
 
 def gen_status_h(statuses):
     out = ["// DO NOT EDIT — generated from schemas/status.toml",
-           "#ifndef SKL_STATUS_H",
-           "#define SKL_STATUS_H",
+           "#ifndef SKALOPS_STATUS_H",
+           "#define SKALOPS_STATUS_H",
            "",
            "#include <stdint.h>",
            "",

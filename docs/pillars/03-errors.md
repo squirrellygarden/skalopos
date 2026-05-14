@@ -62,7 +62,25 @@ const char* status_name(status_t s);     // "STATUS_NO_ENTRY"
 const char* status_describe(status_t s); // "no such file or directory"
 ```
 
-But there is no `errno` global, and libc functions return `status_t` directly or as part of a result struct. Programs that want a single function call to "do or die" can wrap with `STATUS_OR_DIE(expr)` (a macro in `<skl/check.h>`).
+But there is no `errno` global, and libc functions return `status_t` directly or as part of a result struct.
+
+### `<skalops/check.h>` — control-flow macros for `status_t`
+
+Two macros, complementary, in the spirit of Rust's `?` vs `.unwrap()`:
+
+```c
+// Propagate. If `expr` returns a non-OK status_t, return that status from
+// the enclosing function. The enclosing function must itself return status_t.
+// Used as a statement.
+STATUS_TRY(expr);
+
+// Unwrap-or-die. Evaluates a result-struct-returning call; on success yields
+// `.value`, on failure writes a diagnostic to stderr and calls proc_exit with
+// a non-zero code. Used as an expression.
+STATUS_OR_DIE(expr);
+```
+
+`STATUS_TRY` is for normal error propagation up the call stack; `STATUS_OR_DIE` is for "I have asserted this cannot fail in this program" sites (test harnesses, initialization paths where failure is unrecoverable, throwaway tools).
 
 ## Pseudocode — call site shapes
 

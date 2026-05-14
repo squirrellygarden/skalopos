@@ -3,7 +3,7 @@
 # Every syscall the kernel exposes is declared here. tools/gen_syscalls.py reads
 # this file and emits:
 #   - kernel/syscall/dispatch_generated.c   (number → handler table)
-#   - kernel/syscall/numbers_generated.h    (#define SKL_SYS_xxx N)
+#   - kernel/syscall/numbers_generated.h    (#define SKALOPS_SYS_xxx N)
 #   - userland/libc/src/sys/syscall_generated.c   (typed libc wrappers)
 #   - userland/libc/include/sys/syscall.h         (public syscall numbers)
 #
@@ -103,24 +103,24 @@ can_block  = false
 
 [[syscall]]
 number     = 20
-name       = "chan_create"
+name       = "chnl_create"
 pillar     = "04-events"
 summary    = "Create a new channel."
 args       = [
     {name="capacity",   type="u32"},
     {name="flags",      type="u32"},
-    {name="out_chan_h", type="handle_ptr"},
+    {name="out_chnl_h", type="handle_ptr"},
 ]
 returns    = "status"
 can_block  = false
 
 [[syscall]]
 number     = 21
-name       = "chan_send"
+name       = "chnl_send"
 pillar     = "04-events"
 summary    = "Send a message (optionally with handles) on a channel. May block if full."
 args       = [
-    {name="chan_h",         type="handle"},
+    {name="chnl_h",         type="handle"},
     {name="msg",            type="const_void_ptr"},
     {name="msg_len",        type="size"},
     {name="handles",        type="const_handle_ptr"},
@@ -131,11 +131,11 @@ can_block  = true
 
 [[syscall]]
 number     = 22
-name       = "chan_recv"
+name       = "chnl_recv"
 pillar     = "04-events"
 summary    = "Receive a message from a channel. May block if empty."
 args       = [
-    {name="chan_h",             type="handle"},
+    {name="chnl_h",             type="handle"},
     {name="buf",                type="void_ptr"},
     {name="buf_cap",            type="size"},
     {name="out_msg_len",        type="size_ptr"},

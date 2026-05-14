@@ -33,32 +33,32 @@ Semantics:
 
 ## Contract — Bucket B: channels
 
-A **channel** is a bounded MPMC queue of typed messages. Channels are kernel objects referenced by `H_CHAN` handles. Multiple processes can hold handles to the same channel; messages flow point-to-point (one recv per send).
+A **channel** is a bounded MPMC queue of typed messages. Channels are kernel objects referenced by `H_CHNL` handles. Multiple processes can hold handles to the same channel; messages flow point-to-point (one recv per send).
 
 ```c
-status_t chan_create(uint32_t capacity, uint32_t flags, handle_t* out_chan_h);
-status_t chan_send(handle_t chan_h, const void* msg, size_t msg_len,
+status_t chnl_create(uint32_t capacity, uint32_t flags, handle_t* out_chnl_h);
+status_t chnl_send(handle_t chnl_h, const void* msg, size_t msg_len,
                    const handle_t* handles_to_send, size_t handles_count);
-status_t chan_recv(handle_t chan_h, void* buf, size_t buf_cap, size_t* out_msg_len,
+status_t chnl_recv(handle_t chnl_h, void* buf, size_t buf_cap, size_t* out_msg_len,
                    handle_t* handles_buf, size_t handles_buf_cap, size_t* out_handles_count);
-status_t chan_close(handle_t chan_h);
+status_t chnl_close(handle_t chnl_h);
 ```
 
 Semantics:
 
-- **Messages are bytes.** No serialization framework. Senders and receivers agree on the layout via shared headers (e.g., `<skl/event.h>` for kernel-generated messages, application-defined structs for user messages).
+- **Messages are bytes.** No serialization framework. Senders and receivers agree on the layout via shared headers (e.g., `<skalaps/event.h>` for kernel-generated messages, application-defined structs for user messages).
 - **Handles can ride with messages.** If `handles_to_send` is non-empty, the kernel translates each sender handle into a fresh entry in the receiver's handle table. The handles in the sender remain valid (they share the object by refcount). This is the *only* way to share a handle with a process you did not spawn.
-- **`chan_send` blocks if the channel is full** (or returns `STATUS_CHAN_FULL` if `flags & CHAN_NONBLOCK`).
-- **`chan_recv` blocks if the channel is empty** (or returns `STATUS_CHAN_EMPTY` if `flags & CHAN_NONBLOCK`).
-- **Receiving among threads:** multiple threads of the same process may call `chan_recv` on the same handle. The kernel wakes one of them per message; no ordering guarantees among waiters.
-- **Closing:** when all sender-side handles are closed, recv returns `STATUS_CHAN_CLOSED` after draining. When all receiver-side handles are closed, send returns `STATUS_CHAN_CLOSED`.
+- **`chnl_send` blocks if the channel is full** (or returns `STATUS_CHNL_FULL` if `flags & CHNL_NONBLOCK`).
+- **`chnl_recv` blocks if the channel is empty** (or returns `STATUS_CHNL_EMPTY` if `flags & CHNL_NONBLOCK`).
+- **Receiving among threads:** multiple threads of the same process may call `chnl_recv` on the same handle. The kernel wakes one of them per message; no ordering guarantees among waiters.
+- **Closing:** when all sender-side handles are closed, recv returns `STATUS_CHNL_CLOSED` after draining. When all receiver-side handles are closed, send returns `STATUS_CHNL_CLOSED`.
 
 ### The control channel
 
 Each process has exactly one **control channel**. The kernel posts these message types to it:
 
 ```c
-// kernel-generated, defined in <skl/event.h>:
+// kernel-generated, defined in <skalops/event.h>:
 typedef struct { handle_t proc_h; int32_t status; } evt_terminated_t;       // child exited
 typedef struct { handle_t thread_h; fault_info_t info; } evt_faulted_t;     // unhandled fault
 typedef struct { handle_t timer_h; } evt_timer_fired_t;                     // timer
@@ -69,14 +69,14 @@ typedef struct { handle_t shm_h; uint32_t change; } evt_shm_change_t;       // o
 
 Each message begins with a 4-byte type tag (`EVT_TERMINATED`, etc.) so the receiver can dispatch.
 
-The runtime's event loop looks like the user's original sketch:
+The runtime's event loop might resemble this sketch:
 
 ```c
 for (;;) {
     uint8_t buf[256];
     handle_t  handles_in[8];
     size_t    msg_len, handles_count;
-    chan_recv(control_chan, buf, sizeof buf, &msg_len,
+    chnl_recv(control_chnl, buf, sizeof buf, &msg_len,
               handles_in, 8, &handles_count);
 
     uint32_t kind = *(uint32_t*)buf;
@@ -110,5 +110,5 @@ The kernel posts `evt_kill_request_t{deadline_ms}` on the target's control chann
 
 - **Async I/O completions.** The async I/O variants (pillar 6) deliver completions on a channel of the caller's choice. Same mechanism as everything else here.
 - **Timer handles.** `timer_create(channel_h, duration_or_period, kind) → H_TIMER` produces a handle whose firing is delivered to a chosen channel. No special signal numbers (`SIGALRM`); timers are just another event source.
-- **Multi-channel `select`.** A `chan_recv_any(chans[], n)` variant. Not needed in v1 (one control channel handles lifecycle, threads can dedicate themselves to other channels), but a natural extension.
+- **Multi-channel `select`.** A `chnl_recv_any(chnls[], n)` variant. Not needed in v1 (one control channel handles lifecycle, threads can dedicate themselves to other channels), but a natural extension.
 - **Reflection / introspection.** A debug syscall to dump pending messages on a channel without consuming them. Useful for debugging hangs.

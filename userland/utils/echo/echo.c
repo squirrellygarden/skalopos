@@ -2,9 +2,9 @@
 //
 // Print arguments separated by spaces, newline at end. No flags.
 
-#include <skl/spawn.h>
+#include <skalops/spawn.h>
 // #include <stdio.h>      // fputs, putchar
-// #include <skl/handle.h> // STDOUT
+// #include <skalops/handle.h> // STDOUT
 
 int main(int argc, char** argv, char** envp) {
     (void)envp;

@@ -8,7 +8,7 @@ You are working inside Skalapos userland. The top-level [`../CLAUDE.md`](../CLAU
 userland/
   libc/                 the small libc — see CLAUDE.md inside
     include/
-      skl/              Skalapos primitives: <skl/spawn.h>, <skl/channel.h>, <skl/handle.h>, …
+      skalops/              Skalapos primitives: <skalops/spawn.h>, <skalops/channel.h>, <skalops/handle.h>, …
       sys/              syscall-adjacent: <sys/status.h>, <sys/syscall.h>
       (unprefixed)      ISO-C-ish: <string.h>, <stdio.h>, <stdlib.h>, …
     src/
@@ -22,7 +22,7 @@ userland/
 
 ## Coding posture
 
-1. **Use libc functions where they exist; don't dial syscalls directly.** Utilities should not `#include <sys/syscall.h>` — that's a libc-internal detail. They use `<skl/...>` and ISO-C-ish headers.
+1. **Use libc functions where they exist; don't dial syscalls directly.** Utilities should not `#include <sys/syscall.h>` — that's a libc-internal detail. They use `<skalops/...>` and ISO-C-ish headers.
 2. **No `errno`, no `-1` returns.** Functions return `status_t` directly or as part of a result struct.
 3. **No malloc in `/bin/sh`.** The shell uses a fixed-size BSS buffer for input. This is intentional (v1 malloc is a leaky bump allocator).
 4. **No threads in v1 utilities.** They are single-threaded run-to-exit programs.
@@ -42,7 +42,7 @@ Userland is compiled with the same `-ffreestanding -nostdlib` set as the kernel,
 
 ## How to add a libc function
 
-1. Pick the right header. ISO-C-ish things go under `userland/libc/include/<name>.h`. Skalapos-specific things go under `userland/libc/include/skl/<name>.h`.
+1. Pick the right header. ISO-C-ish things go under `userland/libc/include/<name>.h`. Skalapos-specific things go under `userland/libc/include/skalops/<name>.h`.
 2. Implement under `userland/libc/src/<subsystem>/<name>.c`.
 3. Add a single-line `///` comment with the function's contract.
 4. If the function wraps a syscall, do not write the wrapper by hand — add the syscall to the schema and let codegen produce it.

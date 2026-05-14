@@ -3,9 +3,9 @@
 // For each argument, open and copy bytes to stdout. With no arguments,
 // copy stdin to stdout.
 
-#include <skl/spawn.h>
-#include <skl/handle.h>
-// #include <skl/fs.h>     // open_at, file_read, file_write
+#include <skalops/spawn.h>
+#include <skalops/handle.h>
+// #include <skalops/fs.h>     // open_at, file_read, file_write
 // #include <sys/status.h>
 
 int main(int argc, char** argv, char** envp) {

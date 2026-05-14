@@ -21,11 +21,9 @@ Three buckets:
 
 | Prefix | Meaning | Examples |
 |---|---|---|
-| `<skl/...>` | Skalapos-specific primitives | `<skl/spawn.h>`, `<skl/channel.h>`, `<skl/handle.h>`, `<skl/dev/console.h>`, `<skl/dev/block.h>`, `<skl/check.h>` |
-| Unprefixed | ISO-C-ish surface | `<string.h>`, `<stdio.h>`, `<stdlib.h>`, `<stdint.h>`, `<stddef.h>` |
-| `<sys/...>` | Syscall-adjacent low-level | `<sys/status.h>`, `<sys/syscall.h>` (mostly used by libc internals) |
-
-The `#include` line tells you which world you're in. Anything portable-looking should *feel* portable; anything Skalapos-specific should *look* Skalapos-specific.
+| `<skalops/...>` | Skalapos primitives | `<skalops/spawn.h>`, `<skalops/channel.h>`, `<skalops/handle.h>` |
+| Unprefixed | ISO C surface | `<string.h>`, `<stdio.h>`, `<stdlib.h>`, `<stdint.h>`, `<stddef.h>` |
+| `<sys/...>` | Low-level libc surface | `<sys/status.h>`, `<sys/syscall.h>` |
 
 ## libc-core contents
 
@@ -56,7 +54,7 @@ void  free(void* p);                    // no-op in v1
 void  abort(void) __attribute__((noreturn));
 int   atoi(const char* s);
 
-// <skl/check.h>
+// <skalops/check.h>
 #define STATUS_OR_DIE(expr) ...   // exits with status_describe() on failure
 ```
 
@@ -66,7 +64,7 @@ int   atoi(const char* s);
 - `scanf`. No.
 - Long-double, locale, multibyte, wide chars. No.
 - `getenv`/`setenv`. Deferred; the spawn ABI passes `envp` as `(char*[])` but v1 doesn't process it beyond making it available to `main`.
-- `time`, `gettimeofday`. Add a `<skl/time.h>` in v2.
+- `time`, `gettimeofday`. Add a `<skalaps/time.h>` in v2.
 
 ### CRT (crt0)
 
@@ -140,7 +138,7 @@ Two files in [`schemas/`](../../schemas/) are the source of truth:
 
 - Kernel: `kernel/syscall/dispatch_generated.c` (number → handler table), `kernel/syscall/numbers_generated.h`.
 - Userland: `userland/libc/src/sys/syscall_generated.c` (one wrapper function per syscall, with the typed signature), `userland/libc/include/sys/syscall.h`, `userland/libc/include/sys/status.h`.
-- Per-class device headers: not generated from schemas (their opcodes are in `<skl/dev/<class>.h>` and are part of the public API).
+- Per-class device headers: not generated from schemas (their opcodes are in `<skalops/dev/<class>.h>` and are part of the public API).
 
 Run `just codegen` after editing the schemas. The generated files are checked into git so the tree builds without Python at hand — but they MUST be regenerated whenever the schemas change.
 

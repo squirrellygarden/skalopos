@@ -2,9 +2,9 @@
 //
 // Create a directory at the given relative path. No -p in v1.
 
-#include <skl/spawn.h>
-#include <skl/handle.h>
-// #include <skl/fs.h>   // mkdir_at
+#include <skalops/spawn.h>
+#include <skalops/handle.h>
+// #include <skalops/fs.h>   // mkdir_at
 
 int main(int argc, char** argv, char** envp) {
     (void)envp;

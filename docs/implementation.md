@@ -52,7 +52,7 @@ Now the kernel ABI starts looking like a real OS.
 19. **VFS skeleton + initramfs + devfs + tmpfs.** Mount registration, `struct dir`/`struct file`, path resolution with `*_at` and `AT_BENEATH`/`AT_NOFOLLOW`. CPIO parser for the initramfs blob.
 20. **`open_at`, `file_read`, `file_write`, `file_seek`.** Including dev-class dispatch through to the console driver for `/dev/console`.
 21. **`dev_op` syscall + console ops.** Only the ops you actually need in v1 (probably none — defer most until a utility demands them).
-22. **`chan_create`, `chan_send`, `chan_recv` exposed as syscalls.** Test with two spawned processes talking.
+22. **`chnl_create`, `chnl_send`, `chnl_recv` exposed as syscalls.** Test with two spawned processes talking.
 
 ## Phase 4 — Userland (≈1 week)
 

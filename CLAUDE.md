@@ -28,7 +28,7 @@ Never hand-write a syscall number or status code in two places. The schema is th
 
 ## How to add a driver
 
-See [`docs/pillars/08-drivers.md`](docs/pillars/08-drivers.md). Short version: implement `struct driver_ops` for a known device class, call `driver_register()` from kernel init, expose any structured ops via the per-class `dev_op` codes declared in `<skl/dev/<class>.h>`. No `ioctl`.
+See [`docs/pillars/08-drivers.md`](docs/pillars/08-drivers.md). Short version: implement `struct driver_ops` for a known device class, call `driver_register()` from kernel init, expose any structured ops via the per-class `dev_op` codes declared in `<skalops/dev/<class>.h>`. No `ioctl`.
 
 ## How to build and run
 
@@ -67,9 +67,15 @@ These have been considered and explicitly rejected. If a piece of work seems to 
 ## Coding conventions (terse)
 
 - C11, freestanding (`-ffreestanding -nostdlib`).
-- Style: 4-space indent, opening brace on same line, snake_case for functions/variables, ALL_CAPS for macros and enum members.
-- Header layout: one public header per module, in `<skl/...>` (Skalapos-specific) or unprefixed (ISO-C-ish).
-- Every public function gets a one-line `///` comment with its contract. No multi-paragraph docstrings.
+- Run `clang-format` (`.clang-format` at repo root) before committing. Rules it enforces: 4-space indent, opening brace on same line, pointer as `void * foo` (middle-aligned), column limit ~100, consecutive `#define`/`#include` groups aligned.
+- `snake_case` for functions and variables; `ALL_CAPS` for macros and enum members.
+- Comments: `//` style always, including multi-line. Never `/* */`.
+- Explicit-size integer types: `uint32_t`, `uint64_t`, `int32_t`, etc. Use `char` only for ASCII strings.
+- No `typedef struct` unless there is a strong reason (see Linux kernel rationale). Struct tags are enough.
+- No indent-aligning of variable declarations or function parameters — only `#define` and `#include` groups.
+- Line length: target ≤90, up to 110 acceptable if the alternative is awkward line breaks. Prefer refactoring to line-breaking.
+- Header layout: one public header per module, in `<skalops/...>` (Skalapos-specific) or unprefixed (ISO-C-ish).
+- Every public function gets a one-line `// ` comment with its contract. No multi-paragraph docstrings.
 - No comments explaining *what* code does; only *why* if non-obvious.
 - Status codes are typed enums per subsystem; never raw ints in interfaces.
 

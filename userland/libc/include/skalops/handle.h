@@ -1,10 +1,10 @@
-// userland/libc/include/skl/handle.h
+// userland/libc/include/skalops/handle.h
 //
 // Public handle-related declarations for userland. Mirrors the kernel
 // definitions in kernel/handle/handle.h.
 
-#ifndef SKL_HANDLE_H
-#define SKL_HANDLE_H
+#ifndef SKALOPS_HANDLE_H
+#define SKALOPS_HANDLE_H
 
 #include <stdint.h>
 #include <sys/status.h>
@@ -16,7 +16,7 @@ typedef enum {
     H_NONE   = 0,
     H_FILE   = 1,
     H_DIR    = 2,
-    H_CHAN   = 3,
+    H_CHNL   = 3,
     H_PROC   = 4,
     H_THREAD = 5,
     H_TIMER  = 6,
