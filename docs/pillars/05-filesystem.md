@@ -4,14 +4,14 @@
 
 - Familiar POSIX feel: a single global tree rooted at `/`, ambient per-process `cwd`, paths in the surface API.
 - TOCTOU on path-based access is mitigated at the ABI level via the `*_at` family and resolution flags.
-- Filesystems live in the kernel (monolithic) and are statically linked in v1.
+- Filesystems live in the kernel (monolithic); drivers statically linked in v1.
 - Sandboxing exists as an opt-in primitive but is not the default model.
 
 ## Contract — paths and resolution
 
 Skalapos keeps POSIX-style path semantics but makes the `*_at(dir_h, relpath, …)` form the canonical syscall ABI:
 
-- All path-taking syscalls accept a `dir_handle` and a relative `path`. The path must NOT begin with `/`; absolute paths at the kernel boundary are a typed error (`STATUS_PATH_NOT_RELATIVE`).
+- All path-taking syscalls accept a `dir_handle` and a relative `path`. Absolute paths at the kernel boundary are a typed error (`STATUS_PATH_NOT_RELATIVE`).
 - libc provides bare `open(path, …)`-style wrappers that internally translate: if `path` starts with `/`, libc strips the leading slash and calls `_at(ROOT_DIR, path[1..], …)`; otherwise it calls `_at(CWD_DIR, path, …)`. ROOT_DIR and CWD_DIR are Directory handles held in fixed libc-internal slots, set up by the kernel at spawn time.
 - Path resolution walks component-by-component inside the kernel. Per-resolution flags control how strict the walk is.
 
@@ -95,7 +95,7 @@ status_t fs_unmount(handle_t target_dir_h);
 /tmp               tmpfs       (in-memory, populated empty)
 ```
 
-That's the entire v1 mount table. No `/proc`, no `/sys` (deferred). No persistent storage.
+Deferring `/proc`, `/sys` and persistent storage.
 
 ## Pseudocode — path walk
 
@@ -155,13 +155,13 @@ status_t open_at_impl(handle_t dir_h, const char* relpath, uint32_t open_flags,
 
 ## Why this over alternatives
 
-- **F3: single-component-only kernel ABI.** Strictly safer (every lookup is one component, atomic), but requires libc to walk paths one component per syscall — many syscalls per `open`. Rejected by user as too aggressive an ergonomic break.
-- **F2: Plan 9-style per-process namespace.** Each process gets its own mutable mount tree. Slicker for sandboxing; "what is `/etc/hosts`?" depends on who's asking. Rejected — the user wants familiar POSIX paths with no namespace surprises.
-- **No `cwd`** — would force libc to maintain it as a userland concept, identical to the kernel implementation. Net: ambient `cwd` in the kernel is cheaper and matches user expectations.
+- **Single-component-only kernel ABI.** Strictly safer (every lookup is one component, atomic), but requires libc to walk paths one component per syscall — many syscalls per `open`. Rejected by user as too aggressive an ergonomic break.
+- **Plan 9-style per-process namespace.** Namespaces are a headache, and sandboxing isn't a primary usecase.
+- **No `cwd`** — would force libc to maintain it as a userland concept, identical to the kernel implementation. Net: ambient `cwd` in the kernel is cheaper and matches expectations.
 
 ## v2+ direction
 
-- **On-disk FS.** A simple Skalapos FS ("skfs") backed by a block device. Tree-of-extents inode layout, no journaling in v2, no fancy features.
+- **On-disk FS.** A simple Skalapos FS ("skfs") backed by a block device. Tree-of-extents inode layout, no journaling in v2, no fancy optimizations or features.
 - **`/proc`-equivalent.** A read-only synthetic FS exposing process and handle introspection. Built on top of the same FS interface drivers use.
 - **`mount` privilege.** Either via the deferred boolean privilege bit, or — long-term — via a `MOUNT_AUTHORITY` typed handle that PID 1 starts holding and selectively grants.
 - **Persistent namespace operations.** Bind-mount-like ("show this directory at this other location") composed via mount.

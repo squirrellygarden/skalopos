@@ -84,7 +84,7 @@ args       = [
     {name="image",            type="handle"},
     {name="argv",             type="const_char_ptr_ptr"},
     {name="envp",             type="const_char_ptr_ptr"},
-    {name="handles_to_pass",  type="const_handle_ptr"},
+    {name="inherit_handles",  type="const_handle_ptr"},
     {name="handles_count",    type="size"},
     {name="opts",             type="const_spawn_opts_ptr"},   # may be NULL
     {name="out_proc_h",       type="handle_ptr"},

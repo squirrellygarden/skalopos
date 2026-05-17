@@ -7,7 +7,8 @@
 - Process and thread lifecycle events, timer expirations, IO completions, peer IPC, and kill requests all flow through one uniform mechanism: typed messages on typed channels.
 - Every process has a well-known **control channel** that the kernel uses for lifecycle messages.
 
-## Contract — Bucket A: synchronous faults
+## Contract 
+### Synchronous faults
 
 A "fault" is a synchronous CPU exception caused by the currently-executing instruction. Examples: page fault, illegal instruction, alignment fault, divide-by-zero.
 
@@ -31,7 +32,7 @@ Semantics:
 - The handler runs **on the same thread that faulted**, never asynchronously interrupting other code. There is no analog of `SA_RESTART`, no signal mask, no async-signal-safe function list.
 - If no handler is registered when a fault occurs, the kernel synthesizes a `Faulted{thread_h, fault_info}` message and posts it to the **process's control channel** (Bucket B). Effectively a default handler that defers to the supervisor.
 
-## Contract — Bucket B: channels
+### Channels
 
 A **channel** is a bounded MPMC queue of typed messages. Channels are kernel objects referenced by `H_CHNL` handles. Multiple processes can hold handles to the same channel; messages flow point-to-point (one recv per send).
 
@@ -46,14 +47,14 @@ status_t chnl_close(handle_t chnl_h);
 
 Semantics:
 
-- **Messages are bytes.** No serialization framework. Senders and receivers agree on the layout via shared headers (e.g., `<skalaps/event.h>` for kernel-generated messages, application-defined structs for user messages).
+- **Messages are bytes.** No serialization framework.
 - **Handles can ride with messages.** If `handles_to_send` is non-empty, the kernel translates each sender handle into a fresh entry in the receiver's handle table. The handles in the sender remain valid (they share the object by refcount). This is the *only* way to share a handle with a process you did not spawn.
 - **`chnl_send` blocks if the channel is full** (or returns `STATUS_CHNL_FULL` if `flags & CHNL_NONBLOCK`).
 - **`chnl_recv` blocks if the channel is empty** (or returns `STATUS_CHNL_EMPTY` if `flags & CHNL_NONBLOCK`).
 - **Receiving among threads:** multiple threads of the same process may call `chnl_recv` on the same handle. The kernel wakes one of them per message; no ordering guarantees among waiters.
 - **Closing:** when all sender-side handles are closed, recv returns `STATUS_CHNL_CLOSED` after draining. When all receiver-side handles are closed, send returns `STATUS_CHNL_CLOSED`.
 
-### The control channel
+#### The control channel
 
 Each process has exactly one **control channel**. The kernel posts these message types to it:
 
@@ -62,8 +63,8 @@ Each process has exactly one **control channel**. The kernel posts these message
 typedef struct { handle_t proc_h; int32_t status; } evt_terminated_t;       // child exited
 typedef struct { handle_t thread_h; fault_info_t info; } evt_faulted_t;     // unhandled fault
 typedef struct { handle_t timer_h; } evt_timer_fired_t;                     // timer
-typedef struct { uint32_t deadline_ms; } evt_kill_request_t;                // someone asked us to die
-typedef struct { handle_t shm_h; uint32_t change; } evt_shm_change_t;       // optional, v2+
+typedef struct { uint32_t deadline_ms; } evt_kill_request_t;                // kernel wants to kill us
+typedef struct { handle_t shm_h; uint32_t change; } evt_shm_change_t;       // optional, deferred
 // ...
 ```
 
@@ -89,20 +90,18 @@ for (;;) {
 }
 ```
 
-## Kill semantics
+### Kill semantics
 
 ```c
 status_t process_kill(handle_t proc_h, uint32_t deadline_ms);
 ```
 
-The kernel posts `evt_kill_request_t{deadline_ms}` on the target's control channel and starts a timer. The target has `deadline_ms` milliseconds to clean up and call `proc_exit`. If the deadline expires, the kernel force-terminates: all threads stopped, memory reclaimed, handles closed, no further userspace runs.
-
-`deadline_ms == 0` is the SIGKILL equivalent — no message is posted; the kernel terminates immediately.
+The kernel posts `evt_kill_request_t{deadline_ms}` on the target's control channel and starts a timer. The target has `deadline_ms` milliseconds to clean up and call `proc_exit` (to prevent hanging in the handler). If the deadline expires, the kernel force-terminates. `deadline_ms == 0` equivalent to SIGKILL.
 
 ## Why this over alternatives
 
-- **POSIX signals** — every detail is a footgun: tiny fixed numeric namespace (no payload), async delivery into arbitrary code, async-signal-safety, masks, `SA_RESTART`, signal stacks, fork-then-exec interactions. Skalapos splits the two real use cases (sync faults, async notifications) into two clean mechanisms.
-- **Single per-process inbox** (no user-created channels) — considered as a simpler v1. Rejected because libraries within a process would fight over the inbox, and threads couldn't easily own their own queue. Multiple channels cost very little once channels exist as an object type.
+- **POSIX signals** — every detail is a footgun: tiny fixed numeric namespace (no payload), async delivery into arbitrary code, async-signal-safety, masks, `SA_RESTART`, signal stacks, fork-then-exec interactions. Prefer to split the two use cases (sync faults, async notifications) into two clean mechanisms.
+- **Single per-process inbox** (no user-created channels) — Causes resource contention, and difficulty in determining the correct recipient thread. Multiple channels are a low cost.
 - **POSIX `sigwait`-only signals** — keeps the worst part of signals (small numeric namespace, no payload) while fixing only the timing problem. Not enough flattening.
 - **Mach exception ports for faults** — Skalapos's "no handler → forward to control channel" achieves this *as a fallback*; the per-thread handler is the common case. Both modes exist.
 

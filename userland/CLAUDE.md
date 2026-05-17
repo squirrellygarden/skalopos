@@ -27,7 +27,7 @@ userland/
 3. **No malloc in `/bin/sh`.** The shell uses a fixed-size BSS buffer for input. This is intentional (v1 malloc is a leaky bump allocator).
 4. **No threads in v1 utilities.** They are single-threaded run-to-exit programs.
 5. **No environment variables read in v1.** `envp` is plumbed to `main` but not interpreted; `getenv` does not exist.
-6. **Programs receive their handles via the kernel-set-up table.** Conventional slots: stdin=1, stdout=2, stderr=3, then anything the parent passed via `proc_spawn`'s `handles_to_pass`.
+6. **Programs receive their handles via the kernel-set-up table.** Conventional slots: stdin=1, stdout=2, stderr=3, then anything the parent passed via `proc_spawn`'s `inherit_handles`.
 
 ## Build flags
 

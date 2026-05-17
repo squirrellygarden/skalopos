@@ -2,12 +2,13 @@
 
 ## Goals
 
-- Drivers live in the kernel (monolithic). Statically linked. No runtime module loading in v1 or v2.
+- Drivers live in the kernel (monolithic). Statically linked. LKMs deferred.
 - Userland sees devices as files under `/dev`, opened to typed handles.
 - Streaming I/O (read/write bytes) uses the same `file_read`/`file_write` it uses for regular files.
 - Structured device operations go through one syscall: `dev_op(handle, op_code, args, args_len)`. There is no `ioctl`, no `fcntl`, no `prctl`.
 
-## Contract — userland surface
+## Contract 
+### Userland Surface
 
 Devices appear in the filesystem under `/dev`, populated by **devfs** at boot. Opening a device file returns a handle of type `H_FILE` whose subtype is the device's `device_class`.
 
@@ -62,14 +63,14 @@ static inline status_t console_set_mode(handle_t h, uint32_t mode) {
 
 So calling code says `console_set_mode(h, RAW)` — same ergonomics as a per-class syscall family would give, but underneath, only `dev_op` crosses the syscall boundary.
 
-## Contract — in-kernel driver interface
+### In-kernel driver interface
 
 Each driver implements:
 
 ```c
 typedef struct {
     enum device_class class;
-    const char*       name;             // e.g., "pl011_uart"
+    const char * name;             // e.g., "pl011_uart"
 
     status_t (*open) (struct device*, handle_t* out_internal);
     status_t (*close)(struct device*);
@@ -77,10 +78,10 @@ typedef struct {
     status_t (*read) (struct device*, void* buf, size_t n, int64_t off, size_t* out_n);
     status_t (*write)(struct device*, const void* buf, size_t n, int64_t off, size_t* out_n);
 
-    status_t (*dev_op)(struct device*, uint32_t op_code, void* args, size_t args_len, int64_t* out_ret);
+    status_t (*dev_op)(struct device*, uint32_t op_code, void* args, size_t args_len, int64_t * out_ret);
 
     // Hardware lifecycle:
-    void     (*irq_handler)(struct device*);   // called by interrupt subsystem
+    void (*irq_handler)(struct device*);   // called by interrupt subsystem
 } driver_ops_t;
 ```
 
@@ -100,12 +101,12 @@ DRIVER_INIT(pl011_init);   // section-attribute trick to enumerate drivers at bo
 
 A driver may leave any op `NULL`. Calling a NULL op returns `STATUS_NOT_SUPPORTED`. Streaming-only devices populate `read`/`write` and leave `dev_op` NULL; structure-only devices do the inverse.
 
-## Contract — discovery
+###  Device discovery
 
 Skalapos uses a uniform "device probe" subsystem above two arch-specific enumerators:
 
 - **x86_64:** ACPI table walk for platform devices, PCI bus enumeration for everything else. v1 may hardcode standard PC-AT (PIC/IO-APIC, PIT/HPET, COM1, VGA text mode).
-- **aarch64 / Pi 4:** flattened device tree (FDT/DTB) passed by the bootloader. Walk it, match `compatible` strings against registered drivers.
+- **aarch64:** flattened device tree (FDT/DTB) passed by the bootloader. Walk it, match `compatible` strings against registered drivers.
 
 The shared interface:
 
@@ -121,11 +122,11 @@ void driver_register_match(const driver_match_t* m);
 
 The arch enumerator walks its respective table, calls `probe` on the first matching driver, and the probe function allocates a `struct device` and publishes it to devfs.
 
-## v1 driver shopping list
+## Drivers
 
-Mandatory:
+### v1
 
-| Driver | x86_64 | aarch64 (Pi 4) | Notes |
+| Driver | x86_64 | aarch64 | Notes |
 |---|---|---|---|
 | Console | COM1 16550-compatible UART; VGA text mode | PL011 UART | `/dev/console`. `file_write` for output; `file_read` for input. |
 | Timer | HPET (preferred) or legacy PIT | ARM generic timer | Scheduler tick; backs `timer_create` |
@@ -137,15 +138,15 @@ Optional v1 nice-to-haves:
 |---|---|
 | `null`/`zero`/`full` | Synthetic devices in devfs; ~40 LOC each. Useful for testing. |
 
-## v2 driver additions
+### v2
 
 | Driver | Notes |
 |---|---|
-| virtio-blk | First real block device. Enables persistent FS. |
+| virtio-blk | First real block device, to enable persistent FS. |
 
-## v3+ (distant)
+### v3+
 
-Networking (virtio-net or otherwise), USB, sound, framebuffer beyond text mode, real-hardware block (SD/MMC, NVMe).
+Networking, USB, sound, framebuffer beyond text mode, real-hardware block (SD/MMC, NVMe).
 
 ## Pseudocode — adding a driver
 
@@ -183,14 +184,11 @@ DRIVER_INIT(null_init);
 
 ## Why this over alternatives
 
-- **`ioctl` (D1)** — the wart we are fixing. Untyped opcodes, magic-number macros, every driver invents its own. Replaced by typed `dev_op` with per-class headers.
-- **Per-class top-level handle types (D4)** — would give `H_CONSOLE`, `H_BLOCK`, etc., each with its own syscall family. ABI-level type safety; bigger trap table; abandons `file_read`/`file_write` uniformity; ABI commitment per device class. Skalapos chose D2 for the flattening tradeoff.
-- **Drivers as channel endpoints (D3)** — every op a message. Maximally aligns with the event model but breaks the "everything is a file" property hardest. Considered, set aside.
-- **Loadable modules** — real engineering effort; security/ABI-stability questions; minimal win for a toy OS that rebuilds and reboots in seconds. Deferred indefinitely.
+- **`ioctl`** — Awful.
+- **Per-class top-level handle types** — would give `H_CONSOLE`, `H_BLOCK`, etc., each with its own syscall family. ABI-level type safety; bigger trap table; abandons `file_read`/`file_write` uniformity; ABI commitment per device class. Skalapos chose D2 for the flattening tradeoff.
+- **Drivers as channel endpoints** — every op a message. Maximally aligns with the event model but breaks the "everything is a file" property hardest. Considered, set aside.
 
 ## v2+ direction
 
-- **Loadable kernel modules.** Only if there is a real reason — e.g., the kernel grows large enough that recompile becomes painful, or someone wants to develop drivers independently.
-- **Userland device drivers.** Beyond LKMs: a "userfs/userdev" protocol that lets a userland process implement a driver and have it appear in devfs. FUSE-equivalent. Optional escape hatch; not on a planned roadmap.
-- **Hot-plug.** Once any device exists that can be unplugged. Currently nothing in scope qualifies.
-- **Devfs population by sysctl-style runtime config** rather than each driver registering at init. Useful once there are many drivers; overkill for the v1 list.
+- Loadable kernel modules, if the project grows such that this is helpful.
+- Userland device drivers, if desired.

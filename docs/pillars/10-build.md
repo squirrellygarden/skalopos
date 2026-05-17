@@ -14,7 +14,7 @@
 - `x86_64-elf-gcc` (with matching `x86_64-elf-binutils`)
 - `aarch64-elf-gcc` (with matching `aarch64-elf-binutils`)
 
-These target bare-metal ELF, **not** Linux. Distro packages like `gcc-x86-64-linux-gnu` target Linux ABI and will fight you; do not use them.
+Bare metal. Distro packages like `gcc-x86-64-linux-gnu` target Linux ABI and will fight you; do not use them.
 
 Two paths to install:
 
@@ -183,14 +183,12 @@ skalapos/
 
 ## Why this over alternatives
 
-- **GNU Make** — widely understood but ugly. User explicitly disliked the syntax. Non-recursive Make would work; Python-generated Ninja works better with no DSL to learn.
-- **CMake** — generates Ninja but introduces a real DSL learning curve. Toolchain files for cross-compile are a recurring source of friction.
-- **Meson** — closest competitor. Cleaner DSL than CMake. Skipped because the "boring Python emits Ninja" path involves zero new tools we don't already know.
-- **Clang for the toolchain** — fine choice; one binary covers both targets. Default is GCC because inline-asm diagnostics matter weekly for kernel work and OSDev tutorials assume GCC. `CC=clang` is supported.
+- **GNU Make** — widely understood but ugly.
+- **CMake** — Learning curve.
+- **Clang over GCC** — An option, but prefer GCC assembly assist.
 
 ## v2+ direction
 
 - **CI via QEMU.** `just test` boots `init=/bin/test-runner` in QEMU; the test runner exits with a status code surfaced through `isa-debug-exit` (x86) or ARM semihosting; the just recipe maps that to a pass/fail. Not v1 but the hooks are cheap to add.
 - **Build provenance.** `build/<arch>/buildinfo.txt` recording compiler version, flags, commit hash.
 - **Coverage builds.** `-fprofile-arcs -ftest-coverage` flag set, instrumented userland binaries that report into a kernel-side coverage buffer.
-- **Sanitizers.** UBSan in userland is straightforward; kernel sanitizers are real engineering. Optional.

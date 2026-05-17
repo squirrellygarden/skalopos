@@ -4,17 +4,16 @@ This file is your orientation when working in this repo. It's deliberately short
 
 ## What this is
 
-Skalapos is a toy POSIX-evolution OS in freestanding C. Monolithic kernel. ARM64 (Pi 4) + x86_64. Cross-compile + QEMU from day one. See [`README.md`](README.md) and [`docs/overview.md`](docs/overview.md).
+Skalapos is a toy POSIX-evolution OS in freestanding C. Monolithic kernel. ARM64 (Pi 4) + x86_64. Cross-compile + QEMU from day one. See [`README.md`](README.md).
 
 The project is in design phase. The thirteen core decisions are locked in and documented per pillar in [`docs/pillars/`](docs/pillars/). Read them before suggesting anything that touches an ABI.
 
 ## Where to look first
 
-1. [`docs/overview.md`](docs/overview.md) — five-minute mental model.
-2. [`docs/pillars/`](docs/pillars/) — one file per locked-in decision, with **goals / contract / pseudocode / rationale / v2+ direction** sections.
-3. [`docs/implementation.md`](docs/implementation.md) — suggested v1 build order (phases 0-4, ≈7-9 weeks of work). Consult this when starting any implementation task; the phase tells you what other pieces must already be in place.
-4. [`schemas/`](schemas/) — the single source of truth for syscalls and status codes. Anything that changes the ABI changes this file first; codegen does the rest.
-5. The subdirectory `CLAUDE.md` files in [`kernel/`](kernel/), [`userland/`](userland/), [`arch/`](arch/), [`tools/`](tools/) — task-specific guidance.
+1. [`docs/pillars/`](docs/pillars/) — one file per locked-in decision, with **goals / contract / pseudocode / rationale / v2+ direction** sections.
+2. [`docs/implementation.md`](docs/implementation.md) — suggested v1 build order (phases 0-4, ≈7-9 weeks of work). Consult this when starting any implementation task; the phase tells you what other pieces must already be in place.
+3. [`schemas/`](schemas/) — the single source of truth for syscalls and status codes. Anything that changes the ABI changes this file first; codegen does the rest.
+4. The subdirectory `CLAUDE.md` files in [`kernel/`](kernel/), [`userland/`](userland/), [`arch/`](arch/), [`tools/`](tools/) — task-specific guidance.
 
 ## How to add or change a syscall
 
@@ -48,7 +47,7 @@ These have been considered and explicitly rejected. If a piece of work seems to 
 
 - **No `ioctl`, `fcntl`, or `prctl`.** Structured ops go through `dev_op(h, op_code, args)`. See pillar 8.
 - **No `errno` and no `-1` sentinel returns.** Syscalls return `(Status, Value)`. See pillar 3.
-- **No `fork()`.** Process creation is `spawn(image, args, env, handles_to_pass, options)`. See pillar 2.
+- **No `fork()`.** Process creation is `spawn(image, args, env, inherit_handles, options)`. See pillar 2.
 - **No async signal handlers.** Sync CPU faults get per-thread trap handlers; everything else is typed messages on channels. See pillar 4.
 - **No capability theology.** Typed handles exist; *capabilities-with-rights* were rejected. Don't repropose Fuchsia/seL4-style designs.
 - **No global ambient FS root for security purposes.** Sandboxing is a libc/init concern via `proc_chroot(dir_h)`, not the default model — but POSIX paths and `cwd` *do* exist. See pillar 5.

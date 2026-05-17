@@ -39,7 +39,7 @@ Subsystem IDs:
 
 | ID | Subsystem | Example codes |
 |----|-----------|---------------|
-| 0  | `STATUS_OK` and global | `STATUS_OK = 0`, `STATUS_NOT_IMPLEMENTED`, `STATUS_INTERNAL_ERROR` |
+| 0  | Global | `STATUS_OK = 0`, `STATUS_NOT_IMPLEMENTED`, `STATUS_INTERNAL_ERROR` |
 | 1  | Handle | `STATUS_BAD_HANDLE`, `STATUS_BAD_HANDLE_TYPE`, `STATUS_HANDLE_TABLE_FULL` |
 | 2  | FS | `STATUS_NO_ENTRY`, `STATUS_NOT_DIR`, `STATUS_IS_DIR`, `STATUS_NAME_TOO_LONG`, `STATUS_NOT_BENEATH`, `STATUS_LOOP` |
 | 3  | Process | `STATUS_NO_PROC`, `STATUS_BAD_EXEC`, `STATUS_OUT_OF_PIDS` |
@@ -47,7 +47,7 @@ Subsystem IDs:
 | 5  | Channel | `STATUS_CHAN_CLOSED`, `STATUS_CHAN_EMPTY`, `STATUS_CHAN_FULL` |
 | 6  | Device | `STATUS_BAD_OP`, `STATUS_DEVICE_BUSY`, `STATUS_DEVICE_GONE` |
 | 7  | I/O | `STATUS_EOF`, `STATUS_INTERRUPTED`, `STATUS_BAD_SIZE`, `STATUS_OFFSET_BAD` |
-| 8  | Permission (v2+) | reserved |
+| 8  | Reserved | reserved |
 
 `STATUS_OK == 0` always. Any nonzero status is failure.
 
@@ -98,18 +98,23 @@ file_open_result_t r = file_open(root_dir_h, "etc/hosts", O_RDONLY, AT_BENEATH);
 if (r.status != STATUS_OK) { ... }
 use(r.handle);
 
-// Die-on-error:
+// Propagate (enclosing function returns status_t):
+status_t load_config(handle_t root_dir_h, handle_t* out_fd) {
+    STATUS_TRY(open_at(root_dir_h, "etc/hosts", O_RDONLY, AT_BENEATH, out_fd));
+    // ... more setup, any of which may STATUS_TRY ...
+    return STATUS_OK;
+}
+
+// Unwrap-or-die (call site cannot meaningfully recover):
 handle_t fd = STATUS_OR_DIE(file_open(root_dir_h, "etc/hosts", O_RDONLY, AT_BENEATH));
 ```
 
 ## Why this over alternatives
 
 - **`errno`** — thread-local, has to be saved/restored across library calls, easy to forget to clear, and forces every error-returning function to overload its return value with a sentinel. Skalapos pays the cost of a small struct return (or a two-register convention) and gets back composability.
-- **`-1` sentinel** — silently coexists with valid return values for some syscalls (consider `read()` returning a `ssize_t`), forces explicit checks everywhere, and trains programmers to ignore returns. Status-first ABI makes the check unavoidable.
-- **Bare numeric error codes** (no subsystem high byte) — workable, but loses the ability to grep `STATUS_NO_ENTRY` and know it's a filesystem error without consulting docs. The high-byte split costs nothing and reads better.
-- **Rich error objects passed through a caller-provided buffer** — gives more context (which path, which handle, where) but doubles the syscall ABI surface. Deferred to v2+ if it turns out to matter; status alone is enough for v1.
+- **`-1` sentinel** — Conflicts with valid return values for some syscalls (consider `read()` returning a `ssize_t`), forces explicit checks everywhere, and trains programmers to ignore returns. Status-first ABI makes the check unavoidable.
+- **Rich error objects passed through a caller-provided buffer** — gives more context (which path, which handle, where) but doubles the syscall ABI surface and increases complexity.
 
 ## v2+ direction
 
-- **Per-call error context.** Failed syscalls optionally write a small `error_context_t` to a caller-supplied buffer: failing path, failing handle, the kernel-side site that returned. Useful for diagnostics; not on the hot path.
-- **Status-to-message localization.** Not gonna happen.
+No planned direction.

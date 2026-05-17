@@ -1,53 +1,54 @@
 # Skalapos
 
-Skalapos (σκάλοπος, "of the mole") is a toy operating system designed as an evolution of POSIX. Its goal is to keep what POSIX got right and discard or replace what POSIX got wrong, in a small enough codebase that one person can hold the whole thing in their head.
+Skalapos (σκάλοπος, "of the mole") will be an operating system designed as a reinterpretation of Unix. Its goal is to maintain the aesthetics and general principles of *nix ("everything is a file") while using hindsight to flatten the design. Skalapos prefers simplicity of understanding (design, code, artifacts) to scalable efficient operation. 
+
+Skalapos is a security concious operating system, but unlike many modern takes on an operating system (e.g. Zircon/Fuschia or Rust OSes), the design does not intend to optimize for use in security-critical, networked, or multi-user systems. Thus, many design decisions that a modern operating system might make (e.g., microkernel, memory safe language) were intentionally struck down in favor of technical simplicity, ease of use, and aesthetic cohesion.
 
 **Targets:** ARM64 (Raspberry Pi 4) and x86_64.
-**Workflow:** cross-compile + QEMU from day one.
 **Language:** C (freestanding).
 **Kernel architecture:** monolithic.
-**Status:** design phase. No code yet; this repository contains the blueprint and scaffolding.
+**Status:** Design.
 
-## What's in here
+## Contents
 
-- [`docs/`](docs/) — the design. Start with [`docs/overview.md`](docs/overview.md). One file per design pillar lives under [`docs/pillars/`](docs/pillars/). When you're ready to start writing code, [`docs/implementation.md`](docs/implementation.md) gives the suggested v1 build order.
+- [`docs/`](docs/) — the design. Start with [`docs/overview.md`](docs/overview.md). One file per design pillar lives under [`docs/pillars/`](docs/pillars/). Suggested build order in[`docs/implementation.md`](docs/implementation.md).
 - [`schemas/`](schemas/) — single sources of truth for the syscall ABI and status codes.
-- [`arch/`](arch/), [`kernel/`](kernel/), [`userland/`](userland/) — the eventual source tree, currently with placeholder files and per-area `CLAUDE.md` orientation notes.
-- [`tools/`](tools/) — host-side helpers: build-system generator, initramfs packer.
+- [`arch/`](arch/), [`kernel/`](kernel/), [`userland/`](userland/) — the eventual source tree. Currently placeholder.
+- [`tools/`](tools/) — build tools.
 - [`justfile`](justfile) — top-level commands (build, qemu, gdb, test, clean).
 
-## The five-minute pitch
+## Design Summary
 
-Skalapos changes POSIX in thirteen ways, all aimed at flattening the design — removing categories of bugs and special cases, not adding novelty. The pillars:
+Skalapos changes *nix in thirteen ways, all aimed at flattening the design. The pillars:
 
 | # | Pillar | Skalapos's answer | Replaces |
 |---|---|---|---|
 | 1 | Handles | Per-process handle table with kernel-side type tags | Bare `int` file descriptors |
-| 2 | Process creation | `spawn()` with explicit handle list, `clone()` for threads | `fork()` + `exec()` |
-| 3 | Errors | Typed `(Status, Value)` return from every syscall | `-1` sentinel + `errno` |
-| 4 | Events | Per-thread trap handlers (sync faults) + typed messages on channels (async) | Signal handlers |
-| 5 | Filesystem | POSIX-style global tree, but `*_at` everywhere with `AT_BENEATH`/`AT_NOFOLLOW` | Path-based syscalls with TOCTOU |
+| 2 | Process creation | `spawn()` with explicit handle list; `clone()` for threads |  `clone()` and `exec()` interfaces |
+| 3 | Errors | Typed `(Status, Value)` return from every syscall | disunified error conditions + `errno` |
+| 4 | Events | Per-thread trap handlers (sync faults) + typed messages on channels (async) | Signals |
+| 5 | Filesystem | UNIX file tree, but with modern sensibilities | Path-based TOCTOU |
 | 6 | I/O | Sync blocking in v1; completion-on-channel async in v2 | `O_NONBLOCK` + `select`/`epoll` |
-| 7 | Memory | Split-by-intent syscalls, unified `ShmHandle`; DEP+ASLR from day one | `mmap`-omnibus, System V shm, POSIX shm, `brk` |
-| 8 | Drivers | In-kernel, statically linked; `file_read`/`file_write` for streams + one `dev_op(h, op, args)` for structured ops | `ioctl`, `fcntl`, `prctl` |
-| 9 | Init | PID 1 is `/bin/sh` in v1; reaper + separate service manager in v2 | System V init / systemd sprawl |
+| 7 | Memory | Intent-split syscalls, unified `ShmHandle`; memory safety considered from day one | `mmap`-omnibus, POSIX `shm`, `brk` |
+| 8 | Drivers | `file_read`/`file_write` for streams + one `dev_op(h, op, args)` for structured ops | disunified `ioctl`, `fcntl`, `prctl` |
+| 9 | Init | Tiny supervisor/reaper | systemd sprawl |
 | 10 | Build | GCC freestanding cross-toolchain + Python-generated Ninja + Justfile | Make recursion |
-| 11 | Userland | Tiny libc, tiny shell, a few utilities; bump allocator until v2/v3 | glibc, busybox |
-| 12 | Scheduling | Threads as scheduling unit; round-robin v1; user-preemptive non-preemptive-kernel; single CPU v1, SMP v2 | POSIX zombies, scheduler sprawl |
-| 13 | skfs (v2) | On-disk FS: ext2-lineage, 64-bit, UTF-8, xattrs, hex-readable; journaling at v2.1 | FAT32's warts |
+| 11 | Userland | "Skalapos ecosystem" libc, shell, and dynamic allocator | glibc, busybox |
+| 12 | Scheduling | Threads as scheduling unit; round-robin; user-preemptive non-preemptive-kernel | POSIX zombies, scheduler sprawl |
+| 13 | skfs (v2) | "Modern" take on FAT32 symplicity | Dense, human-unreadable filesystems. |
 
 Details, rationale, and contracts in [`docs/pillars/`](docs/pillars/).
 
-## Why "Skalapos"?
+## Etymology of "Skalapos"
 
-Ancient Greek for "mole," genitive case (σκάλοπος, *of the mole*). Moles dig. So does this.
+Ancient Greek for "mole," in the genetive case (σκάλοπος, *of the mole*). Moles and other common terranian "pests" (squirrels, oppossums, skunks, etc.) embody the beauty of the earth. In the endevour of Skalapos, I hope to express in code the beauty of these animals.
 
 ## Versioning intent
 
-- **v1:** boots in QEMU on x86_64 and aarch64, drops into a shell, can run a handful of utilities. Demonstrates every locked-in ABI.
-- **v2:** persistent storage (virtio-blk + simple on-disk FS), service manager, async I/O variants.
-- **v3+:** wide open. Some directions documented in [`docs/roadmap.md`](docs/roadmap.md); none committed.
+- **v1:**  Demonstrate ABI and core kernel functions with userland / persistant storage as an afterthought.
+- **v2:** persistent storage, and async I/O variants. Potentially kernel optimizations. In userland, a proper service manager/`init` and 
+- **v3+:** See ideas in [`docs/roadmap.md`](docs/roadmap.md).
 
 ## License
 
-MIT. See [`LICENSE`](LICENSE).
+MIT. See [`LICENSE`](LICENSE). Just don't do anything you know in your gut is morally wrong. Artificial intellegence is involved in the process of developing this system, and as such, I can't claim to have full ownership over its artifacts.

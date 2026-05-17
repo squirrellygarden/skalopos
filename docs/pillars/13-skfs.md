@@ -1,14 +1,12 @@
 # Pillar 13 — skfs (on-disk filesystem)
 
-> v2 deliverable. Not in v1. Documented now so the design is settled before block devices land.
-
 ## Goals
 
-- A real on-disk filesystem for v2, replacing the in-memory initramfs as the place state lives.
+- On-disk filesystem for v2
 - An improvement on FAT32 — Skalapos's user is comfortable with FAT internals and wants a "present-proof" successor, not a research filesystem.
-- Hex-readable on disk by design: looking at an image in `xxd` is a first-class debugging method.
-- Posix-style mode/owner stored even though Skalapos v2 doesn't enforce permissions yet (v3 can turn enforcement on without an FS rewrite).
-- Metadata journaling planned as **v2.1**, a focused follow-on milestone after the base FS is solid.
+- Hex-readable on disk by design
+- Posix mode/owner bits stored even though Skalapos v2 doesn't enforce permissions yet
+- Metadata journaling planned as a later feature
 
 ## What FAT32 gets wrong (the targets)
 
@@ -30,7 +28,7 @@
 
 skfs keeps the *posture* (readable, flat, debuggable) and fixes the per-file metadata, naming, addressing, and free-space pieces. Journaling lands at v2.1.
 
-## Contract — v2.0 (base FS, no journal yet)
+## Contract — v2.0
 
 ### On-disk layout (4 KiB blocks)
 
@@ -49,10 +47,10 @@ Block size is **4 KiB**, period. Matches both target arches' page size. Matches 
 
 ```
 offset  size  field
-  0     4     magic           = "SKFS" (ASCII, byte order: 0x53 0x4b 0x46 0x53)
-  4     4     version_major   = 1     (1 = v2.0; bump for v2.1 journaling)
-  8     4     version_minor   = 0
- 12     4     block_size      = 4096
+  0     4     magic
+  4     4     version_major
+  8     4     version_minor
+ 12     4     block_size
  16     8     total_blocks
  24     8     inode_table_start_block
  32     8     inode_table_block_count
@@ -81,11 +79,11 @@ Backup superblock (block 1) is byte-identical at mkfs time; the FS rewrites it o
 ```
 offset  size  field
   0     2     type             0=free, 1=file, 2=dir, 3=symlink, 4=device-special, 5..=reserved
-  2     2     mode             POSIX-style permission bits (stored; not enforced in v2)
+  2     2     mode             POSIX permission bits
   4     4     owner_uid        Stored as placeholder; ignored in v2. v3 may enforce.
   8     4     owner_gid        Same.
  12     2     nlinks
- 14     2     flags            FS-internal flags (reserved 0 in v2)
+ 14     2     flags            FS-internal flags
  16     8     size_bytes       64-bit; file size or, for dirs, on-disk size of the directory blob
  24     8     blocks_used      Count of 4 KiB blocks the inode references
  32     8     atime_ns         ns since unix epoch
@@ -97,7 +95,7 @@ offset  size  field
 168     8     double_indirect  (~1 GiB)
 176     8     triple_indirect  (~512 GiB)
 184     8     xattr_block      Pointer to a block holding extended attributes (NULL = none)
-192    64     reserved         (must be 0; growable in future versions)
+192    64     reserved
 ```
 
 Total: 256 bytes. 16 inodes per 4 KiB block. The ext2/ext3 lineage in plain sight, intentionally — it's a known-good design.
@@ -228,14 +226,6 @@ status_t skfs_init(void);   // called from kmain
 `fs_ops` provides: `mount(block_dev_h, target_dir_h, opts)`, `unmount`, plus the per-inode/per-file callbacks the VFS layer expects.
 
 The block device is a `File` handle (per pillar 8's D2 model) of device-class `DEV_BLOCK`, opened from `/dev/<blockdev>`. skfs reads and writes through `file_read`/`file_write` (positional, 4 KiB-aligned) and the `dev_op(BLOCK_FLUSH)` op for flushes. No special block-IO path; the existing syscall ABI is enough.
-
-## Why this over alternatives
-
-- **Direct port of FAT32** — keeps every wart. Defeats the purpose.
-- **exFAT or NTFS** — proprietary lineage, no clean spec, complex on-disk format. exFAT is technically usable but inherits enough FAT-isms to not be worth implementing from scratch.
-- **ext2 / ext4** — the closest ancestor. We're essentially designing "ext2 with sane choices" — UTF-8 names, 64-bit timestamps in ns, xattr support from v1, hex-readable discipline. Compatibility with ext2 was considered and rejected — there's no win, and matching ext2 byte-for-byte means inheriting historical layout decisions we'd otherwise improve.
-- **Full btrfs-style COW** — beautiful, multi-month project, way beyond v2 scope.
-- **Journal first, base FS later** — wrong order. The base FS is what stores data; you can't journal a thing that doesn't exist. v2.0 ships the on-disk format and the read/write paths; v2.1 wraps the metadata writes in a journal.
 
 ## v2+ direction beyond v2.1
 

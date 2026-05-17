@@ -8,7 +8,7 @@
 #include <stdint.h>
 #include <stddef.h>
 
-typedef int32_t handle_t;
+typedef uint32_t handle_t;
 #define HANDLE_INVALID ((handle_t)0)
 
 typedef enum {
